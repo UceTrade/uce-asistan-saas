@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Wizard Test</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+            background: #1a1a2e;
+            color: white;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        #log {
+            background: #0f0f1e;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+
+        .success {
+            color: #4caf50;
+        }
+
+        .error {
+            color: #f44336;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🧪 Conversation Wizard Test</h1>
+
+    <button onclick="testModal()">Test 1: Check Modal Exists</button>
+    <button onclick="testFunction()">Test 2: Check Function Exists</button>
+    <button onclick="testOpen()">Test 3: Open Modal</button>
+
+    <div id="log"></div>
+
+    <script>
+        function log(msg, type = 'info') {
+            const div = document.getElementById('log');
+            const p = document.createElement('p');
+            p.className = type;
+            p.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            div.appendChild(p);
+        }
+
+        function testModal() {
+            const modal = document.getElementById('conversationWizardModal');
+            if (modal) {
+                log('✅ Modal element exists!', 'success');
+                log(`   Display: ${modal.style.display}`, 'info');
+            } else {
+                log('❌ Modal element NOT found!', 'error');
+            }
+        }
+
+        function testFunction() {
+            if (typeof openConversationWizard === 'function') {
+                log('✅ openConversationWizard function exists!', 'success');
+            } else {
+                log('❌ openConversationWizard function NOT found!', 'error');
+            }
+        }
+
+        function testOpen() {
+            try {
+                // Create fake description
+                const desc = document.createElement('textarea');
+                desc.id = 'strategyDescription';
+                desc.value = 'Test strategy';
+                document.body.appendChild(desc);
+
+                // Create modal if doesn't exist
+                if (!document.getElementById('conversationWizardModal')) {
+                    const modal = document.createElement('div');
+                    modal.id = 'conversationWizardModal';
+                    modal.style.display = 'none';
+                    modal.innerHTML = '<div>MODAL CONTENT</div>';
+                    document.body.appendChild(modal);
+                }
+
+                // Try to open
+                if (typeof openConversationWizard === 'function') {
+                    openConversationWizard();
+                    log('✅ Function called successfully!', 'success');
+
+                    setTimeout(() => {
+                        const modal = document.getElementById('conversationWizardModal');
+                        if (modal && modal.style.display === 'flex') {
+                            log('✅ Modal is now visible!', 'success');
+                        } else {
+                            log(`❌ Modal display is: ${modal ? modal.style.display : 'null'}`, 'error');
+                        }
+                    }, 100);
+                } else {
+                    log('❌ Function not available', 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>

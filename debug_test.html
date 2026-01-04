@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Backtest Debug Test</title>
+</head>
+
+<body>
+    <h1>Strategy Generation Test</h1>
+    <button onclick="testConnection()">1. Test WebSocket Connection</button><br><br>
+    <button onclick="testStrategyGeneration()">2. Test Strategy Generation</button><br><br>
+    <div id="output" style="white-space: pre-wrap; font-family: monospace; margin-top: 20px;"></div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8765');
+        const output = document.getElementById('output');
+
+        ws.onopen = () => {
+            log('✅ WebSocket connected');
+        };
+
+        ws.onerror = (error) => {
+            log('❌ WebSocket error: ' + error);
+        };
+
+        ws.onmessage = (event) => {
+            log('📨 Received: ' + event.data);
+        };
+
+        function log(message) {
+            output.textContent += message + '\n';
+            console.log(message);
+        }
+
+        function testConnection() {
+            output.textContent = '';
+            log('Testing connection...');
+            ws.send(JSON.stringify({ action: 'ping' }));
+        }
+
+        function testStrategyGeneration() {
+            output.textContent = '';
+            log('Testing strategy generation...');
+
+            const message = {
+                action: 'parse_strategy',
+                description: 'Buy when RSI is below 30, sell when RSI is above 70',
+                ai_provider: 'groq',
+                api_key: 'YOUR_API_KEY_HERE'  // Replace with actual key
+            };
+
+            log('Sending: ' + JSON.stringify(message, null, 2));
+            ws.send(JSON.stringify(message));
+        }
+    </script>
+</body>
+
+</html>

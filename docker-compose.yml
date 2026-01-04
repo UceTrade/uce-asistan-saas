@@ -1,0 +1,40 @@
+# UceAsistan Docker Compose - Development
+version: '3.8'
+
+services:
+  # Frontend (nginx serving static files)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - uceasistan-net
+
+  # Backend (WebSocket server)
+  # Note: For full MT5 functionality, run backend natively on Windows
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8766:8766"
+    env_file:
+      - backend/.env
+    volumes:
+      - ./backend/user_templates.json:/app/user_templates.json
+      - ./backend/logs:/app/logs
+    networks:
+      - uceasistan-net
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 8766)); s.close()" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  uceasistan-net:
+    driver: bridge

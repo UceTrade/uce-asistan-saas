@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UceAsistan & Risk Koruyucu</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Supabase Client (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="auth-hidden">
+    <!-- Login/Register Overlay -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <img src="assets/jaguar_logo.jpg" alt="Logo">
+                <h1>UceAsistan</h1>
+                <p>Üst Düzey Yatırım İstihbarat Platformu</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">Giriş Yap</button>
+                <button class="auth-tab" onclick="switchAuthTab('register')">Kayıt Ol</button>
+            </div>
+
+            <form id="loginForm" class="auth-form" onsubmit="handleAuthAction(event, 'login')">
+                <div class="form-group">
+                    <label class="form-label">E-posta</label>
+                    <input type="email" class="form-input" id="loginEmail" placeholder="admin@uceasistan.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Şifre</label>
+                    <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Sisteme Giriş Yap</button>
+            </form>
+
+            <form id="registerForm" class="auth-form hidden" onsubmit="handleAuthAction(event, 'register')">
+                <div class="form-group">
+                    <label class="form-label">E-posta</label>
+                    <input type="email" class="form-input" id="regEmail" placeholder="ornek@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Şifre</label>
+                    <input type="password" class="form-input" id="regPassword" placeholder="Minimum 6 Karakter"
+                        required>
+                </div>
+                <button type="submit" class="btn btn-outline w-full">Hesap Oluştur</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>&copy; 2024 UceAsistan SaaS. Tüm hakları saklıdır.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Wrapper (Initially hidden) -->
+    <div id="appShell" class="app-shell">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="assets/jaguar_logo.jpg" alt="Logo"
+                        style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.2);">
+                    UceAsistan
+                </div>
+
+                <div class="flex items-center gap-md">
+                    <!-- View Tabs -->
+                    <div class="flex gap-sm">
+                        <button class="btn btn-primary" id="dashboardTab" onclick="switchView('dashboard')">
+                            📊 Panel
+                        </button>
+                        <button class="btn btn-outline" id="backtestTab" onclick="switchView('backtest')">
+                            📈 Geçmiş Testi
+                        </button>
+                        <button class="btn btn-outline" id="neuralTab" onclick="switchView('neural')">
+                            📊 Terminal
+                        </button>
+                        <button class="btn btn-outline" id="journalTab" onclick="switchView('journal')">
+                            📓 Günlük & Analiz
+                        </button>
+                    </div>
+
+
+
+                    <!-- Settings -->
+                    <button class="btn btn-outline" onclick="openSettingsModal()">
+                        ⚙️ Ayarlar
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Container -->
+        <div class="container">
+            <!-- Connection Status -->
+            <div id="connectionStatus" class="glass-card mb-lg" style="display: none;">
+                <div class="flex items-center gap-md">
+                    <div id="statusIndicator" class="badge badge-danger">🔴 Bağlantı Kesildi</div>
+                    <span id="statusMessage">MT5 sunucusuna bağlanılıyor...</span>
+                </div>
+            </div>
+
+            <!-- Dashboard View -->
+            <div id="dashboardView">
+                <!-- Account Overview -->
+                <div class="grid grid-4 mb-lg">
+                    <div class="glass-card stat-card">
+                        <div class="stat-label">Bakiye</div>
+                        <div class="stat-value" id="statBalance">$0.00</div>
+                    </div>
+
+                    <div class="glass-card stat-card">
+                        <div class="stat-label">Varlık</div>
+                        <div class="stat-value" id="statEquity">$0.00</div>
+                    </div>
+
+                    <div class="glass-card stat-card">
+                        <div class="stat-label">Kâr/Zarar</div>
+                        <div class="stat-value" id="statProfit">$0.00</div>
+                    </div>
+
+                    <div class="glass-card stat-card">
+                        <div class="stat-label">Günlük K/Z</div>
+                        <div class="stat-value" id="statDailyProfit">$0.00</div>
+                    </div>
+                </div>
+
+                <!-- Risk Status & Performance -->
+                <div class="grid grid-2 mb-lg">
+                    <!-- Risk Status -->
+                    <div class="glass-card">
+                        <h2 class="mb-md">⚠️ Risk Durumu</h2>
+
+                        <div class="mb-md">
+                            <div class="flex justify-between mb-sm">
+                                <span class="text-secondary">Maksimum Düşüş</span>
+                                <span id="drawdownPercent">0%</span>
+                            </div>
+                            <div class="progress progress-danger">
+                                <div class="progress-bar" id="drawdownBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-md">
+                            <div class="flex justify-between mb-sm">
+                                <span class="text-secondary">Günlük Risk Kullanımı</span>
+                                <span id="dailyRiskPercent">0%</span>
+                            </div>
+                            <div class="progress progress-warning">
+                                <div class="progress-bar" id="dailyRiskBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="badge" id="riskLevelBadge">
+                            🟢 Güvenli Bölge
+                        </div>
+                    </div>
+
+                    <!-- Performance Metrics -->
+                    <div class="glass-card">
+                        <h2 class="mb-md">📊 Performans</h2>
+
+                        <div class="grid grid-2 gap-md">
+                            <div>
+                                <div class="text-secondary text-sm">Açık İşlemler</div>
+                                <div class="text-xl" id="openPositions">0</div>
+                            </div>
+
+                            <div>
+                                <div class="text-secondary text-sm">Teminat Seviyesi</div>
+                                <div class="text-xl" id="marginLevel">0%</div>
+                            </div>
+
+                            <div>
+                                <div class="text-secondary text-sm">Serbest Teminat</div>
+                                <div class="text-xl" id="freeMargin">$0</div>
+                            </div>
+
+                            <div>
+                                <div class="text-secondary text-sm">Kullanılan Teminat</div>
+                                <div class="text-xl" id="usedMargin">$0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Positions & Chart -->
+                <div class="grid grid-2 mb-lg">
+                    <!-- Open Positions -->
+                    <div class="glass-card">
+                        <h2 class="mb-md">📈 Açık İşlemler</h2>
+                        <div id="positionsList">
+                            <div class="text-center text-muted">Açık işlem yok</div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Chart -->
+                    <div class="glass-card">
+                        <h2 class="mb-md">📉 Varlık Grafiği</h2>
+                        <canvas id="equityChart" height="200"></canvas>
+                    </div>
+                </div>
+
+
+                <!-- Strategy Quick Launcher -->
+                <div class="glass-card mt-lg"
+                    style="border: 1px solid var(--success); background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));">
+                    <h2 class="mb-md">🚀 Hızlı Strateji Başlat</h2>
+                    <div class="grid grid-4 gap-md items-end">
+                        <div class="form-group mb-0">
+                            <label class="form-label">Strateji</label>
+                            <select id="dashboardStrategySelect" class="form-select">
+                                <option value="">-- Strateji Seç --</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label class="form-label">Sembol</label>
+                            <select id="dashboardSymbolSelect" class="form-select">
+                                <option value="EURUSD">EURUSD</option>
+                                <option value="GBPUSD">GBPUSD</option>
+                                <option value="USDJPY">USDJPY</option>
+                                <option value="XAUUSD">XAUUSD</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label class="form-label">Timeframe</label>
+                            <select id="dashboardTimeframe" class="form-select">
+                                <option value="M5">M5</option>
+                                <option value="M15">M15</option>
+                                <option value="H1" selected>H1</option>
+                                <option value="H4">H4</option>
+                                <option value="D1">D1</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-success" onclick="quickLaunchFromDashboard()" style="height: 42px;">
+                            ▶️ Başlat
+                        </button>
+                    </div>
+                    <div id="liveTraderStatus" class="mt-md text-sm text-secondary" style="display: none;">
+                        <span class="badge badge-success">🟢 Aktif</span> <span id="liveTraderInfo"></span>
+                    </div>
+                </div>
+
+                <!-- Prop Firm Rules Panel -->
+                <div class="glass-card mt-lg" id="propFirmPanel"
+                    style="border: 1px solid var(--primary); background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.05));">
+                    <div class="flex justify-between items-center mb-md">
+                        <h2>🏦 Prop Firm Kuralları</h2>
+                        <div class="flex gap-sm items-center">
+                            <select id="propFirmSelect" class="form-select" style="width: auto; min-width: 150px;"
+                                onchange="loadPropFirmRules(this.value)">
+                                <option value="">🔄 Otomatik Algıla</option>
+                                <option value="ftmo">FTMO</option>
+                                <option value="the5ers">The5ers</option>
+                                <option value="fundednext">FundedNext</option>
+                                <option value="myforexfunds">MyForexFunds</option>
+                                <option value="topstep">Topstep</option>
+                                <option value="e8funding">E8 Funding</option>
+                                <option value="alphaCapital">Alpha Capital</option>
+                            </select>
+                            <button class="btn btn-outline btn-sm" onclick="refreshPropFirmRules()">🔄</button>
+                        </div>
+                    </div>
+
+                    <div id="propFirmContent">
+                        <div class="text-center text-muted p-lg">
+                            <p>⏳ Prop firm kuralları yükleniyor...</p>
+                            <small>MT5 hesabınıza göre firma otomatik algılanacak</small>
+                        </div>
+                    </div>
+
+                    <!-- Warnings Section -->
+                    <div id="propFirmWarnings" class="mt-md" style="display: none;">
+                        <!-- Dynamic warnings will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Portfolio View -->
+
+        <div id="portfolioView" class="hidden">
+            <!-- Portfolio Summary -->
+            <div class="grid grid-4 mb-lg">
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Toplam Bakiye</div>
+                    <div class="stat-value" id="portfolioBalance">$0.00</div>
+                </div>
+
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Toplam Varlık</div>
+                    <div class="stat-value" id="portfolioEquity">$0.00</div>
+                </div>
+
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Toplam Kâr</div>
+                    <div class="stat-value" id="portfolioProfit">$0.00</div>
+                </div>
+
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Hesaplar</div>
+                    <div class="stat-value" id="portfolioAccounts">0</div>
+                </div>
+            </div>
+
+            <!-- Accounts Comparison -->
+            <div class="glass-card">
+                <h2 class="mb-md">💼 Hesap Karşılaştırması</h2>
+                <div id="accountsComparison">
+                    <div class="text-center text-muted">Henüz hesap eklenmedi</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Backtest View -->
+        <div id="backtestView" class="hidden">
+            <!-- Strategy Input -->
+            <div class="glass-card mb-lg">
+                <h2 class="mb-md">🐆 UceAsistan Strateji Oluşturucu</h2>
+
+                <!-- NEW: Quick Action Buttons -->
+                <div class="flex gap-md mb-md">
+                    <button class="btn btn-primary" onclick="openConversationWizard()">
+                        💬 Adım Adım Wizard
+                    </button>
+                    <button class="btn btn-outline" onclick="showTemplateGallery()">
+                        📚 Şablon Galerisi
+                    </button>
+                </div>
+
+                <!-- Template Selector - Enhanced -->
+                <div class="form-group">
+                    <label class="form-label">⚡ Hızlı Başlangıç Şablonları</label>
+                    <select id="templateSelector" class="form-select" onchange="loadTemplate()">
+                        <option value="">-- Sıfırdan başla veya şablon seç --</option>
+                        <option value="rsi_oversold">📊 RSI Aşırı Satım/Alım (Oscillator)</option>
+                        <option value="sma_crossover">📈 SMA Kesişimi - Golden/Death Cross (Trend)</option>
+                        <option value="ict_fvg">💎 ICT Fair Value Gap (Smart Money)</option>
+                        <option value="breakout">🚀 Breakout Kırılım (Volatility)</option>
+                        <option value="mean_reversion">🔄 Mean Reversion - Bollinger (Range)</option>
+                        <option value="ict_smart_money">🏆 ICT Smart Money - Tested (%15 Getiri)</option>
+                    </select>
+                    <small class="text-secondary text-sm">Hazır bir strateji seç veya kendi stratejini
+                        tanımla</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Stratejinizi Tanımlayın</label>
+                    <textarea id="strategyDescription" class="form-input" rows="4"
+                        placeholder="Örnek: RSI 30'un altındayken ve fiyat 20 SMA'yı yukarı kestiğinde al. RSI 70'in üzerindeyken veya fiyat 20 SMA'yı aşağı kestiğinde sat."></textarea>
+                </div>
+
+                <button class="btn btn-primary" onclick="generateStrategy()">
+                    ✨ Strateji Kodu Oluştur
+                </button>
+            </div>
+
+            <!-- Generated Code -->
+            <div class="glass-card mb-lg" id="generatedCodeSection" style="display: none;">
+                <h2 class="mb-md">📜 Oluşturulan Strateji</h2>
+
+                <!-- Strategy Summary Box -->
+                <div id="strategySummarySection" class="mb-md p-md"
+                    style="display:none; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-md);">
+                    <div class="flex items-center gap-sm mb-xs">
+                        <span class="text-xl">💡</span>
+                        <span class="text-success font-bold">Strateji Özeti</span>
+                    </div>
+                    <div id="strategySummaryText" class="text-secondary" style="line-height: 1.5; font-size: 0.95em;">
+                        <!-- Summary will appear here -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label text-sm text-muted mb-xs">Python Kodu</label>
+                    <textarea id="strategyCode" class="form-input" rows="15"
+                        style="font-family: 'Courier New', monospace; font-size: 12px;"></textarea>
+                </div>
+
+                <div class="form-group"
+                    style="padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
+                    <label class="form-label">✨ AI ile Strateji İyileştir</label>
+                    <div class="flex gap-sm">
+                        <input type="text" id="aiEditRequest" class="form-input"
+                            placeholder='Örn: "ATR tabanlı stop ekle" veya "Trend filtresi ekle"' style="flex: 1;">
+                        <button class="btn btn-primary" onclick="improveStrategy()">✨ Uygula</button>
+                    </div>
+                    <small class="text-secondary text-sm mt-sm">AI'ya kod değişikliği isteklerini söyleyin</small>
+                </div>
+
+                <div class="flex gap-md">
+                    <button class="btn btn-success" onclick="showBacktestParams()">
+                        ▶️ Testi Başlat
+                    </button>
+                    <button class="btn btn-primary" onclick="goLiveWithStrategy()"
+                        style="background: linear-gradient(135deg, #10b981, #059669);">
+                        🚀 Canlıya Al
+                    </button>
+                    <button class="btn btn-secondary" onclick="saveAsTemplate()"
+                        style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                        📁 Şablon Kaydet
+                    </button>
+                    <button class="btn btn-outline" onclick="clearStrategy()">
+                        🗑️ Temizle
+                    </button>
+                </div>
+            </div>
+
+            <!-- Backtest Parameters -->
+            <div class="glass-card mb-lg" id="backtestParamsSection" style="display: none;">
+                <h2 class="mb-md">⚙️ Test Parametreleri</h2>
+
+                <div class="grid grid-3 gap-md mb-md">
+                    <div class="form-group">
+                        <label class="form-label">Sembol</label>
+                        <input type="text" id="btSymbol" class="form-input" value="EURUSD">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Zaman Dilimi</label>
+                        <select id="btTimeframe" class="form-select">
+                            <option value="M1">M1 (1 Dakika)</option>
+                            <option value="M5">M5 (5 Dakika)</option>
+                            <option value="M15">M15 (15 Dakika)</option>
+                            <option value="M30">M30 (30 Dakika)</option>
+                            <option value="H1" selected>H1 (1 Saat)</option>
+                            <option value="H4">H4 (4 Saat)</option>
+                            <option value="D1">D1 (Günlük)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Başlangıç Bakiyesi</label>
+                        <input type="number" id="btBalance" class="form-input" value="10000">
+                    </div>
+                </div>
+
+                <div class="grid grid-2 gap-md mb-md">
+                    <div class="form-group">
+                        <label class="form-label">Başlangıç Tarihi</label>
+                        <input type="date" id="btStartDate" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Bitiş Tarihi</label>
+                        <input type="date" id="btEndDate" class="form-input">
+                    </div>
+                </div>
+
+                <div class="grid grid-2 gap-md mb-md">
+                    <div class="form-group">
+                        <label class="form-label">Lot Büyüklüğü</label>
+                        <input type="number" id="btLotSize" class="form-input" value="0.01" step="0.01">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Spread (puan)</label>
+                        <input type="number" id="btSpread" class="form-input" value="2">
+                    </div>
+                </div>
+
+                <button class="btn btn-success" onclick="runBacktest()" id="runBacktestBtn">
+                    🚀 Testi Başlat
+                </button>
+            </div>
+
+            <!-- Results -->
+            <div id="backtestResults" style="display: none;">
+                <!-- Metrics -->
+                <div class="grid grid-4 mb-lg">
+                    <div class="glass-card stat-card">
+                        <div class="stat-label">Net Kâr</div>
+                        <div class="stat-value" id="btNetProfit">$0.00</div>
+                    </div>
+
+                    <div class="glass-card stat-card">
+                        <div class="stat-label">Kazanma Oranı</div>
+                        <div class="stat-value" id="btWinRate">0%</div>
+                    </div>
+
+                    <div class="glass-card stat-card">
+                        <div class="stat-label">Kâr Faktörü</div>
+                        <div class="stat-value" id="btProfitFactor">0.00</div>
+                    </div>
+
+                    <div class="glass-card stat-card">
+                        <div class="stat-label">Maksimum Düşüş</div>
+                        <div class="stat-value" id="btMaxDD">0%</div>
+                    </div>
+                </div>
+
+                <!-- More Metrics -->
+                <div class="grid grid-2 mb-lg">
+                    <div class="glass-card">
+                        <h3 class="mb-md">📊 İşlem İstatistikleri</h3>
+                        <div class="grid grid-2 gap-md">
+                            <div>
+                                <div class="text-secondary text-sm">Toplam İşlem</div>
+                                <div class="text-xl" id="btTotalTrades">0</div>
+                            </div>
+                            <div>
+                                <div class="text-secondary text-sm">Kazanan İşlemler</div>
+                                <div class="text-xl stat-positive" id="btWinningTrades">0</div>
+                            </div>
+                            <div>
+                                <div class="text-secondary text-sm">Kaybeden İşlemler</div>
+                                <div class="text-xl stat-negative" id="btLosingTrades">0</div>
+                            </div>
+                            <div>
+                                <div class="text-secondary text-sm">Getiri %</div>
+                                <div class="text-xl" id="btReturn">0%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card">
+                        <h3 class="mb-md">💰 Kâr/Zarar Detayı</h3>
+                        <div class="grid grid-2 gap-md">
+                            <div>
+                                <div class="text-secondary text-sm">Toplam Kâr</div>
+                                <div class="text-xl stat-positive" id="btTotalProfit">$0</div>
+                            </div>
+                            <div>
+                                <div class="text-secondary text-sm">Toplam Zarar</div>
+                                <div class="text-xl stat-negative" id="btTotalLoss">$0</div>
+                            </div>
+                            <div>
+                                <div class="text-secondary text-sm">Ortalama Kazanç</div>
+                                <div class="text-xl" id="btAvgWin">$0</div>
+                            </div>
+                            <div>
+                                <div class="text-secondary text-sm">Ortalama Kayıp</div>
+                                <div class="text-xl" id="btAvgLoss">$0</div>
+                            </div>
+                            <div>
+                                <div class="text-secondary text-sm">Ortalama Kâr (Genel)</div>
+                                <div class="text-xl" id="btAvgProfit">$0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Equity Curve / Price Chart -->
+                <div class="glass-card mb-lg">
+                    <h2 class="mb-md">📈 Fiyat ve İşlem Grafiği</h2>
+                    <canvas id="equityCurveChart" height="200"></canvas>
+                </div>
+
+                <!-- Trade List -->
+                <div class="glass-card">
+                    <h2 class="mb-md">📋 İşlem Geçmişi</h2>
+                    <div id="tradesList" style="max-height: 400px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Terminal View (Bloomberg Style) -->
+        <div id="neuralView" class="hidden">
+            <div class="terminal-container">
+                <!-- Top Ticker Bar -->
+                <div class="terminal-ticker-bar">
+                    <div class="ticker-scroll" id="tickerScroll">
+                        <!-- Ticker items loaded dynamically -->
+                        <span class="ticker-item loading">Piyasa verileri yükleniyor...</span>
+                    </div>
+                </div>
+
+                <!-- Terminal Header -->
+                <div class="terminal-header">
+                    <div class="flex items-center gap-md">
+                        <h1 class="terminal-title">📊 MARKET TERMINAL</h1>
+                        <span class="terminal-time" id="terminalTime">--:--:--</span>
+                        <div id="marketStatus" class="market-status closed">
+                            <span class="status-dot"></span>
+                            <span class="status-text">OFFLINE</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-sm">
+                        <button class="btn btn-outline btn-sm" onclick="window.marketTerminal.refreshAll()">
+                            🔄 Yenile
+                        </button>
+                        <select id="terminalRefreshRate" class="form-select" style="width: auto;"
+                            onchange="window.marketTerminal.setRefreshRate(this.value)">
+                            <option value="0">Manuel</option>
+                            <option value="5">5 sn</option>
+                            <option value="10">10 sn</option>
+                            <option value="30">30 sn</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Main Terminal Grid -->
+                <div class="terminal-grid">
+                    <!-- Left Panel: Major FX -->
+                    <div class="terminal-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">💱 MAJOR FX</span>
+                        </div>
+                        <div class="panel-content" id="panelMajorFX">
+                            <div class="watchlist-loading">Yükleniyor...</div>
+                        </div>
+                    </div>
+
+                    <!-- Center Panel: Metals & Crypto -->
+                    <div class="terminal-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">🥇 METALS & ₿ CRYPTO</span>
+                        </div>
+                        <div class="panel-content" id="panelMetalsCrypto">
+                            <div class="watchlist-loading">Yükleniyor...</div>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel: Indices -->
+                    <div class="terminal-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">📈 INDICES</span>
+                        </div>
+                        <div class="panel-content" id="panelIndices">
+                            <div class="watchlist-loading">Yükleniyor...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Section: Market Overview -->
+                <div class="terminal-bottom-grid">
+                    <!-- Market Movers -->
+                    <div class="terminal-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">🚀 EN ÇOK HAREKET</span>
+                        </div>
+                        <div class="panel-content movers-panel" id="panelMovers">
+                            <div class="movers-section">
+                                <div class="movers-title text-success">▲ Yükselenler</div>
+                                <div id="topGainers" class="movers-list">--</div>
+                            </div>
+                            <div class="movers-section">
+                                <div class="movers-title text-danger">▼ Düşenler</div>
+                                <div id="topLosers" class="movers-list">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Session Info -->
+                    <div class="terminal-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">🌍 MARKET SEANSLAR</span>
+                        </div>
+                        <div class="panel-content sessions-panel" id="panelSessions">
+                            <div class="session-row" id="sessionTokyo">
+                                <span class="session-name">🇯🇵 Tokyo</span>
+                                <span class="session-time">00:00 - 09:00 UTC</span>
+                                <span class="session-status closed">KAPALI</span>
+                            </div>
+                            <div class="session-row" id="sessionLondon">
+                                <span class="session-name">🇬🇧 London</span>
+                                <span class="session-time">07:00 - 16:00 UTC</span>
+                                <span class="session-status closed">KAPALI</span>
+                            </div>
+                            <div class="session-row" id="sessionNewYork">
+                                <span class="session-name">🇺🇸 New York</span>
+                                <span class="session-time">12:00 - 21:00 UTC</span>
+                                <span class="session-status closed">KAPALI</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="terminal-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">📊 ÖZET</span>
+                        </div>
+                        <div class="panel-content stats-panel" id="panelStats">
+                            <div class="stat-row">
+                                <span class="stat-name">DXY (USD Index)</span>
+                                <span class="stat-value" id="statDXY">--</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">VIX (Korku Endeksi)</span>
+                                <span class="stat-value" id="statVIX">--</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Aktif Sembol</span>
+                                <span class="stat-value" id="statActiveSymbols">0</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Son Güncelleme</span>
+                                <span class="stat-value" id="statLastUpdate">--:--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Symbol Detail Modal (Click on symbol to expand) -->
+                <div id="symbolDetailModal" class="symbol-detail-modal hidden">
+                    <div class="symbol-detail-content">
+                        <div class="symbol-detail-header">
+                            <h2 id="detailSymbolName">--</h2>
+                            <button class="btn-close" onclick="window.marketTerminal.closeDetail()">✕</button>
+                        </div>
+                        <div class="symbol-detail-body">
+                            <div class="detail-price-section">
+                                <div class="detail-price" id="detailPrice">--</div>
+                                <div class="detail-change" id="detailChange">--</div>
+                            </div>
+                            <div class="detail-stats-grid">
+                                <div class="detail-stat">
+                                    <span class="label">Açılış</span>
+                                    <span class="value" id="detailOpen">--</span>
+                                </div>
+                                <div class="detail-stat">
+                                    <span class="label">Yüksek</span>
+                                    <span class="value" id="detailHigh">--</span>
+                                </div>
+                                <div class="detail-stat">
+                                    <span class="label">Düşük</span>
+                                    <span class="value" id="detailLow">--</span>
+                                </div>
+                                <div class="detail-stat">
+                                    <span class="label">Spread</span>
+                                    <span class="value" id="detailSpread">--</span>
+                                </div>
+                            </div>
+                            <div class="detail-actions mt-md">
+                                <button class="btn btn-success btn-sm" onclick="executeQuickTrade('BUY')">📈 AL</button>
+                                <button class="btn btn-danger btn-sm" onclick="executeQuickTrade('SELL')">📉
+                                    SAT</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- JOURNAL VIEW -->
+    <div id="journalView" style="display: none;">
+        <!-- Journal Stats -->
+        <div class="grid grid-4 mb-lg">
+            <div class="glass-card stat-card">
+                <div class="stat-label">Toplam İşlem</div>
+                <div class="stat-value" id="jTotalTrades">0</div>
+            </div>
+            <div class="glass-card stat-card">
+                <div class="stat-label">Başarı Oranı</div>
+                <div class="stat-value" id="jWinRate">0%</div>
+            </div>
+            <div class="glass-card stat-card">
+                <div class="stat-label">Kâr Faktörü</div>
+                <div class="stat-value" id="jProfitFactor">0.00</div>
+            </div>
+            <div class="glass-card stat-card">
+                <div class="stat-label">Net Kâr</div>
+                <div class="stat-value" id="jNetProfit">$0.00</div>
+            </div>
+        </div>
+
+        <!-- AI Coach Analysis Section -->
+        <div class="glass-card mb-lg"
+            style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border: 1px solid rgba(102, 126, 234, 0.3);">
+            <div class="flex justify-between items-center mb-md">
+                <h2 class="flex items-center gap-sm">🐆 UceAsistan Derin Analiz</h2>
+                <button class="btn btn-primary" onclick="analyzeJournal()">
+                    ✨ Analiz Et
+                </button>
+            </div>
+            <div id="journalAIAnalysis" class="text-secondary" style="line-height: 1.6;">
+                Henüz analiz yapılmadı. İşlem geçmişinizi ve notlarınızı analiz etmek için butona tıklayın.
+            </div>
+        </div>
+
+        <div class="grid grid-3 mb-lg" style="grid-template-columns: 2fr 1fr;">
+            <!-- Trade History Table -->
+            <div class="glass-card">
+                <div class="flex justify-between items-center mb-md">
+                    <h2>📋 İşlem Günlüğü</h2>
+                    <select class="form-select" style="width: auto;" onchange="loadJournalData(this.value)">
+                        <option value="7">Son 7 Gün</option>
+                        <option value="30" selected>Son 30 Gün</option>
+                        <option value="90">Son 90 Gün</option>
+                    </select>
+                </div>
+                <div class="table-container" style="max-height: 500px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left;">
+                                <th style="padding: 1rem;">Tarih</th>
+                                <th style="padding: 1rem;">Sembol</th>
+                                <th style="padding: 1rem;">Yön</th>
+                                <th style="padding: 1rem;">Kâr/Zarar</th>
+                                <th style="padding: 1rem;">Notlar/Duygu</th>
+                                <th style="padding: 1rem;">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="journalTableBody">
+                            <!-- Trades will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Best/Worst Stats -->
+            <div class="glass-card">
+                <h2 class="mb-md">🏆 İstatistikler</h2>
+                <div class="mb-lg">
+                    <div class="text-secondary text-sm mb-xs">En İyi Parite</div>
+                    <div class="text-xl text-primary" id="jBestPair">N/A</div>
+                </div>
+                <div class="mb-lg">
+                    <div class="text-secondary text-sm mb-xs">Ortalama Kazanç</div>
+                    <div class="text-xl stat-positive" id="jAvgWin">$0</div>
+                </div>
+                <div class="mb-lg">
+                    <div class="text-secondary text-sm mb-xs">Ortalama Kayıp</div>
+                    <div class="text-xl stat-negative" id="jAvgLoss">$0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Analytics Dashboard -->
+        <div class="glass-card mb-lg mt-lg"
+            style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); border: 1px solid rgba(56, 189, 248, 0.3);">
+            <div class="flex justify-between items-center mb-md">
+                <h2 class="flex items-center gap-sm">📊 Gelişmiş Performans Analizi</h2>
+                <div class="flex gap-sm">
+                    <select class="form-select" style="width: auto;" onchange="loadJournalAnalytics(this.value)">
+                        <option value="7">Son 7 Gün</option>
+                        <option value="30" selected>Son 30 Gün</option>
+                        <option value="90">Son 90 Gün</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="loadJournalAnalytics()">
+                        🔄 Yenile
+                    </button>
+                </div>
+            </div>
+
+            <!-- Analytics Summary Cards -->
+            <div class="grid grid-6 gap-md mb-lg">
+                <div class="stat-mini-card">
+                    <div class="stat-mini-label">Kazanma %</div>
+                    <div class="stat-mini-value text-success" id="analyticsWinRate">0%</div>
+                </div>
+                <div class="stat-mini-card">
+                    <div class="stat-mini-label">Profit Factor</div>
+                    <div class="stat-mini-value" id="analyticsProfitFactor">0.00</div>
+                </div>
+                <div class="stat-mini-card">
+                    <div class="stat-mini-label">Net K/Z</div>
+                    <div class="stat-mini-value" id="analyticsNetProfit">$0</div>
+                </div>
+                <div class="stat-mini-card">
+                    <div class="stat-mini-label">Beklenti</div>
+                    <div class="stat-mini-value" id="analyticsExpectancy">$0</div>
+                </div>
+                <div class="stat-mini-card">
+                    <div class="stat-mini-label">Toplam İşlem</div>
+                    <div class="stat-mini-value" id="analyticsTotalTrades">0</div>
+                </div>
+                <div class="stat-mini-card">
+                    <div class="stat-mini-label">Ort. İşlem</div>
+                    <div class="stat-mini-value" id="analyticsAvgTrade">$0</div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="grid grid-2 gap-lg mb-lg">
+                <!-- Hourly Performance -->
+                <div class="glass-card">
+                    <h3 class="mb-md">⏰ Saat Bazlı Performans</h3>
+                    <div id="hourlyChartContainer" style="max-height: 300px; overflow-y: auto;">
+                        <p class="text-muted text-center">Veri yükleniyor...</p>
+                    </div>
+                </div>
+
+                <!-- Daily Performance -->
+                <div class="glass-card">
+                    <h3 class="mb-md">📅 Gün Bazlı Performans</h3>
+                    <div id="dailyChartContainer">
+                        <p class="text-muted text-center">Veri yükleniyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-2 gap-lg mb-lg">
+                <!-- Symbol Performance -->
+                <div class="glass-card">
+                    <h3 class="mb-md">💹 Sembol Performansı</h3>
+                    <div id="symbolTableContainer" style="max-height: 250px; overflow-y: auto;">
+                        <p class="text-muted text-center">Veri yükleniyor...</p>
+                    </div>
+                </div>
+
+                <!-- Emotion Analysis -->
+                <div class="glass-card">
+                    <h3 class="mb-md">🧠 Duygu Analizi</h3>
+                    <div id="emotionChartContainer">
+                        <p class="text-muted text-center">Veri yükleniyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Streaks & Recommendations -->
+            <div class="grid grid-2 gap-lg">
+                <div class="glass-card">
+                    <h3 class="mb-md">🔥 Seri & Risk</h3>
+                    <div id="streakContainer">
+                        <p class="text-muted text-center">Veri yükleniyor...</p>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <h3 class="mb-md">💡 AI Önerileri</h3>
+                    <div id="recommendationsContainer">
+                        <p class="text-muted text-center">Veri yükleniyor...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Strategies View -->
+    <div id="strategies-view" style="display: none;">
+        <div class="glass-card mb-lg">
+            <div class="flex justify-between items-center mb-md">
+                <h2>♟️ Kayıtlı Stratejilerim</h2>
+                <button class="btn btn-outline" onclick="strategyManager.loadStrategies()">
+                    🔄 Yenile
+                </button>
+            </div>
+            <div class="table-container" style="max-height: 500px; overflow-y: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left;">
+                            <th style="padding: 1rem;">Strateji Adı</th>
+                            <th style="padding: 1rem;">Oluşturma Tarihi</th>
+                            <th style="padding: 1rem;">Zaman Dilimi</th>
+                            <th style="padding: 1rem;">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="strategiesTableBody">
+                        <tr>
+                            <td colspan="4" class="text-center text-muted" style="padding: 2rem;">
+                                Henüz kayıtlı strateji yok. Geçmiş Testi bölümünden strateji oluşturup
+                                kaydedebilirsiniz.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Note Editor Modal -->
+    <div id="noteModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">İşlem Notu Ekle</h2>
+                <button class="modal-close" onclick="closeNoteModal()">&times;</button>
+            </div>
+            <form id="noteForm" onsubmit="saveTradeNote(event)">
+                <input type="hidden" id="notePositionId">
+
+                <div class="form-group">
+                    <label class="form-label">Bu işlem sırasında nasıl hissediyordun?</label>
+                    <div class="flex gap-sm flex-wrap" id="emotionSelector">
+                        <button type="button" class="btn btn-outline btn-sm emotion-btn" data-val="calm">😌
+                            Sakin</button>
+                        <button type="button" class="btn btn-outline btn-sm emotion-btn" data-val="anxious">😰
+                            Endişeli</button>
+                        <button type="button" class="btn btn-outline btn-sm emotion-btn" data-val="greedy">🤑
+                            Açgözlü</button>
+                        <button type="button" class="btn btn-outline btn-sm emotion-btn" data-val="revenge">😡
+                            İntikam</button>
+                        <button type="button" class="btn btn-outline btn-sm emotion-btn" data-val="fearful">😨
+                            Korkulu</button>
+                        <button type="button" class="btn btn-outline btn-sm emotion-btn" data-val="confident">😎
+                            Özgüvenli</button>
+                    </div>
+                    <input type="hidden" id="noteEmotion" value="neutral">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Strateji Etiketi</label>
+                    <input type="text" class="form-input" id="noteStrategy"
+                        placeholder="Örn: Trend Takibi, Breakout...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Notlar</label>
+                    <textarea class="form-input" id="noteText" rows="4"
+                        placeholder="Neden girdin? Neden çıktın? Neler öğrendin?"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Kaydet</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Account Modal -->
+    <div id="addAccountModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">MT5 Hesabı Ekle</h2>
+                <button class="modal-close" onclick="closeAddAccountModal()">&times;</button>
+            </div>
+
+            <form id="addAccountForm" onsubmit="addAccount(event)">
+                <div class="form-group">
+                    <label class="form-label">Hesap Adı</label>
+                    <input type="text" class="form-input" id="accountName" placeholder="İşlem Hesabım" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Giriş No (Login)</label>
+                    <input type="number" class="form-input" id="accountLogin" placeholder="12345678" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Şifre</label>
+                    <input type="password" class="form-input" id="accountPassword" placeholder="••••••••" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Sunucu</label>
+                    <input type="text" class="form-input" id="accountServer" placeholder="MetaQuotes-Demo" required>
+                </div>
+
+                <div class="flex gap-md">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Hesabı Ekle</button>
+                    <button type="button" class="btn btn-outline" onclick="closeAddAccountModal()">İptal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Ayarlar</h2>
+                <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
+            </div>
+
+            <form id="settingsForm" onsubmit="saveSettings(event)">
+                <div class="auth-tabs" style="margin-bottom: var(--space-lg);">
+                    <button type="button" class="auth-tab active" onclick="switchSettingsTab('general')">Genel</button>
+                    <button type="button" class="auth-tab" onclick="switchSettingsTab('telegram')">📱
+                        Telegram</button>
+                    <button type="button" class="auth-tab" onclick="switchSettingsTab('videos')">🎬
+                        Videolar</button>
+                    <button type="button" class="auth-tab" onclick="switchSettingsTab('account')">Üyelik &
+                        Lisans</button>
+                </div>
+
+                <div id="generalSettings">
+                    <h3 class="mb-md">YZ Sağlayıcı</h3>
+
+                    <div class="form-group">
+                        <label class="form-label">Sağlayıcı Seçin</label>
+                        <select class="form-select" id="aiProvider">
+                            <option value="groq">Groq (Ücretsiz ve Hızlı)</option>
+                            <option value="openai">OpenAI (GPT-4)</option>
+                            <option value="gemini">Google Gemini</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">API Anahtarı</label>
+                        <input type="password" class="form-input" id="aiApiKey" placeholder="API Anahtarınızı girin">
+                    </div>
+
+                    <hr style="border-color: rgba(255,255,255,0.1); margin: var(--space-lg) 0;">
+
+                    <h3 class="mb-md">Prop Firm Kuralları</h3>
+
+                    <div class="form-group">
+                        <label class="form-label">Maksimum Düşüş (Max Drawdown %)</label>
+                        <input type="number" class="form-input" id="maxDrawdown" value="10" step="0.1">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Günlük Zarar Limiti (%)</label>
+                        <input type="number" class="form-input" id="dailyLimit" value="5" step="0.1">
+                    </div>
+                </div>
+
+                <!-- Telegram Settings Tab -->
+                <div id="telegramSettings" class="hidden">
+                    <h3 class="mb-md">📱 Telegram Bildirim Ayarları</h3>
+
+                    <div class="glass-card mb-md"
+                        style="background: rgba(0, 136, 204, 0.1); border: 1px solid rgba(0, 136, 204, 0.3); padding: 1rem;">
+                        <p class="text-sm text-secondary mb-sm">
+                            <strong>Nasıl yapılır?</strong>
+                        </p>
+                        <ol class="text-sm text-secondary" style="margin-left: 1rem; line-height: 1.8;">
+                            <li>Telegram'da <strong>@BotFather</strong>'a gidin</li>
+                            <li><code>/newbot</code> komutu ile yeni bot oluşturun</li>
+                            <li>Bot Token'ı aşağıya yapıştırın</li>
+                            <li>Oluşturduğunuz bot'a bir mesaj gönderin</li>
+                            <li><strong>@userinfobot</strong>'dan Chat ID'nizi öğrenin</li>
+                        </ol>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Bot Token</label>
+                        <input type="text" class="form-input" id="telegramBotToken"
+                            placeholder="123456789:ABCdefGHIjklmNOPqrstUVWxyz">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Chat ID</label>
+                        <input type="text" class="form-input" id="telegramChatId" placeholder="123456789">
+                    </div>
+
+                    <div class="flex gap-sm mb-md">
+                        <button type="button" class="btn btn-outline" onclick="testTelegramConnection()">
+                            🔗 Bağlantıyı Test Et
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="sendTestTelegramMessage()">
+                            📤 Test Mesajı Gönder
+                        </button>
+                    </div>
+
+                    <div id="telegramStatus" class="mb-md" style="display: none;">
+                        <!-- Status will appear here -->
+                    </div>
+
+                    <hr style="border-color: rgba(255,255,255,0.1); margin: var(--space-lg) 0;">
+
+                    <h4 class="mb-md">Bildirim Tercihleri</h4>
+
+                    <div class="form-group">
+                        <label class="flex items-center gap-sm">
+                            <input type="checkbox" id="telegramRiskAlerts" checked>
+                            <span>⚠️ Risk uyarıları</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="flex items-center gap-sm">
+                            <input type="checkbox" id="telegramConfluence" checked>
+                            <span>🎯 Confluence tespitleri</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="flex items-center gap-sm">
+                            <input type="checkbox" id="telegramTrades" checked>
+                            <span>📈 İşlem bildirimleri</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Video Tutorials Tab -->
+                <div id="videosSettings" class="hidden">
+                    <h3 class="mb-md">🎬 Video Eğitimler</h3>
+                    <p class="text-secondary mb-lg">UceAsistan'ı en verimli şekilde kullanmayı öğrenin</p>
+
+                    <!-- Video 1: Dashboard -->
+                    <div class="glass-card mb-md"
+                        style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3); padding: 1rem;">
+                        <div class="flex items-center gap-md mb-sm">
+                            <span style="font-size: 2rem;">📊</span>
+                            <div>
+                                <h4 style="margin: 0;">Dashboard Kullanımı</h4>
+                                <p class="text-sm text-secondary">Bakiye, risk ve performans takibi</p>
+                            </div>
+                        </div>
+                        <video controls style="width: 100%; border-radius: 8px; max-height: 200px; background: #000;">
+                            <source src="assets/tutorials/dashboard_final.mp4" type="video/mp4">
+                            Video yüklenemedi
+                        </video>
+                    </div>
+
+                    <!-- Video 2: Backtest -->
+                    <div class="glass-card mb-md"
+                        style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1rem;">
+                        <div class="flex items-center gap-md mb-sm">
+                            <span style="font-size: 2rem;">📈</span>
+                            <div>
+                                <h4 style="margin: 0;">Strateji Test Etme</h4>
+                                <p class="text-sm text-secondary">AI ile strateji oluşturma ve backtest</p>
+                            </div>
+                        </div>
+                        <video controls style="width: 100%; border-radius: 8px; max-height: 200px; background: #000;">
+                            <source src="assets/tutorials/backtest_final.mp4" type="video/mp4">
+                            Video yüklenemedi
+                        </video>
+                    </div>
+
+                    <!-- Video 3: API Setup -->
+                    <div class="glass-card mb-md"
+                        style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 1rem;">
+                        <div class="flex items-center gap-md mb-sm">
+                            <span style="font-size: 2rem;">⚙️</span>
+                            <div>
+                                <h4 style="margin: 0;">API Kurulumu</h4>
+                                <p class="text-sm text-secondary">Groq, OpenAI ve Telegram bağlantısı</p>
+                            </div>
+                        </div>
+                        <video controls style="width: 100%; border-radius: 8px; max-height: 200px; background: #000;">
+                            <source src="assets/tutorials/api_setup_final.mp4" type="video/mp4">
+                            Video yüklenemedi
+                        </video>
+                    </div>
+
+                    <!-- Video 4: AI Chat -->
+                    <div class="glass-card mb-md"
+                        style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); padding: 1rem;">
+                        <div class="flex items-center gap-md mb-sm">
+                            <span style="font-size: 2rem;">🤖</span>
+                            <div>
+                                <h4 style="margin: 0;">AI Asistan Kullanımı</h4>
+                                <p class="text-sm text-secondary">Akıllı sohbet ve piyasa analizi</p>
+                            </div>
+                        </div>
+                        <video controls style="width: 100%; border-radius: 8px; max-height: 200px; background: #000;">
+                            <source src="assets/tutorials/ai_chat_demo.mp4" type="video/mp4">
+                            Video yüklenemedi
+                        </video>
+                    </div>
+
+                    <div class="text-center mt-lg">
+                        <p class="text-sm text-secondary">Daha fazla video için <a
+                                href="https://uceasistan.com/tutorials" target="_blank"
+                                style="color: var(--primary);">web sitemizi ziyaret edin</a></p>
+                    </div>
+                </div>
+
+                <div id="accountSettings" class="hidden">
+                    <div class="glass-card mb-md text-center" style="background: rgba(102, 126, 234, 0.1);">
+                        <div id="subPlanBadge" class="badge badge-success mb-sm">Professional Plan</div>
+                        <h2 id="subEmail">admin@uceasistan.com</h2>
+                        <p class="text-muted mt-sm">Paket Bitiş Tarihi: <span id="subExpiry"
+                                class="text-secondary">20.12.2026</span></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Lisans Anahtarı</label>
+                        <input type="text" class="form-input" id="licenseKey" value="UCE-PROF-XXXX-XXXX" readonly>
+                    </div>
+
+                    <button type="button" class="btn btn-danger w-full mt-md" onclick="uceAuth.logout()">
+                        🚪 Oturumu Kapat
+                    </button>
+                </div>
+
+                <div class="flex gap-md mt-lg" id="settingsActionButtons">
+                    <button type="submit" class="btn btn-success" style="flex: 1;">Ayarları Kaydet</button>
+                    <button type="button" class="btn btn-outline" onclick="closeSettingsModal()">İptal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI Chat Interface -->
+    <div id="chatContainer" class="chat-container">
+        <div class="chat-header">
+            <div class="flex items-center gap-md">
+                <img src="assets/jaguar_logo.jpg" alt="Logo"
+                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
+                <div>
+                    <div style="font-weight: 600;">UceAsistan Akıllı Sohbet</div>
+                    <div class="text-sm text-secondary" id="chatAccountName">Bir hesap seçin</div>
+                </div>
+            </div>
+            <button class="modal-close" onclick="toggleChat()">&times;</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-message chat-message-ai">
+                Merhaba! Ben UceAsistan, senin akıllı yatırım yardımcınım. Bugün sana nasıl yardımcı olabilirim?
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <input type="text" class="form-input chat-input" id="chatInput" placeholder="Bana her şeyi sorabilirsin..."
+                onkeypress="handleChatKeyPress(event)">
+            <button class="btn btn-primary" onclick="sendChatMessage()">Gönder</button>
+        </div>
+    </div>
+
+    <!-- Conversation Wizard Modal -->
+    <div id="conversationWizardModal" class="modal-overlay" style="display: none;">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h2 class="modal-title">💬 Strateji Wizard'ı</h2>
+                <button class="modal-close" onclick="closeConversationWizard()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Progress Indicator -->
+                <div class="mb-lg">
+                    <div class="flex justify-between mb-sm">
+                        <span class="text-sm text-secondary">Adım <span id="wizardCurrentStep">1</span> /
+                            3</span>
+                        <span class="text-sm text-secondary"><span id="wizardProgress">33</span>%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" id="wizardProgressBar"
+                            style="width: 33%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
+                    </div>
+                </div>
+
+                <!-- Question Container -->
+                <div id="wizardQuestionContainer">
+                    <h3 class="mb-md" id="wizardQuestion">Yükleniyor...</h3>
+                    <div id="wizardOptions" class="flex flex-column gap-sm">
+                        <!-- Options will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex gap-md mt-lg">
+                    <button class="btn btn-outline" id="wizardBackBtn" onclick="wizardPreviousStep()" disabled>
+                        ← Geri
+                    </button>
+                    <button class="btn btn-primary" id="wizardNextBtn" onclick="wizardNextStep()" style="flex: 1;"
+                        disabled>
+                        İleri →
+                    </button>
+                    <button class="btn btn-success" id="wizardFinishBtn" onclick="wizardFinish()"
+                        style="flex: 1; display: none;">
+                        ✨ Strateji Oluştur
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Optimizer Results Modal -->
+    <div id="optimizerModal" class="modal-overlay" style="display: none;">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <h2 class="modal-title">⚡ Strateji Optimizasyon Önerileri</h2>
+                <button class="modal-close" onclick="closeOptimizerModal()">&times;</button>
+            </div>
+
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Backtest Summary -->
+                <div class="mb-lg p-md" style="background: rgba(255,255,255,0.05); border-radius: var(--radius-md);">
+                    <h3 class="mb-sm">📊 Backtest Sonuçları</h3>
+                    <div class="grid grid-4 gap-md">
+                        <div>
+                            <div class="text-sm text-secondary">Win Rate</div>
+                            <div class="text-xl" id="optWinRate">0%</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-secondary">Profit Factor</div>
+                            <div class="text-xl" id="optProfitFactor">0.00</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-secondary">Max Drawdown</div>
+                            <div class="text-xl" id="optDrawdown">0%</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-secondary">Total Trades</div>
+                            <div class="text-xl" id="optTrades">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suggestions Container -->
+                <div id="optimizerSuggestions">
+                    <!-- Suggestions will be inserted here -->
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeOptimizerModal()">Kapat</button>
+                <button class="btn btn-primary" onclick="applyAllOptimizations()">
+                    ✨ Tüm Önerileri Uygula
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversation Wizard Modal -->
+    <div id="conversationWizardModal" class="modal-overlay" style="display: none;">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h2 class="modal-title">💬 Strateji Wizard'ı</h2>
+                <button class="modal-close" onclick="closeConversationWizard()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Progress -->
+                <div class="mb-lg">
+                    <div class="flex justify-between text-sm text-secondary mb-xs">
+                        <span>Adım <span id="wizardCurrentStep">1</span> / 4</span>
+                        <span><span id="wizardProgress">25</span>%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar wizard-progress-bar" style="width: 25%;"></div>
+                    </div>
+                </div>
+
+                <!-- Question -->
+                <h3 id="wizardQuestion" class="mb-md">Soru yükleniyor...</h3>
+
+                <!-- Options -->
+                <div id="wizardOptions" class="flex flex-column gap-sm">
+                    <!-- Options will be inserted here -->
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="wizardBackBtn" class="btn btn-outline" onclick="wizardPreviousStep()" disabled>
+                    ← Geri
+                </button>
+                <button id="wizardNextBtn" class="btn btn-primary" onclick="wizardNextStep()" disabled>
+                    İleri →
+                </button>
+                <button id="wizardFinishBtn" class="btn btn-success" onclick="wizardFinish()" style="display: none;">
+                    ✨ Strateji Oluştur
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signal Confluence Finder Section -->
+    <div id="confluenceView" class="view" style="display: none;">
+        <div class="glass-card mb-lg">
+            <h1>🎯 Signal Confluence Finder</h1>
+            <p class="text-secondary">Birden fazla stratejiyi aynı anda çalıştır ve tüm stratejilerin aynı
+                sinyali
+                verdiği anları bul</p>
+        </div>
+
+        <div class="grid grid-2 gap-lg">
+            <!-- Strategy Selection -->
+            <div class="glass-card">
+                <h2 class="mb-md">📚 Strateji Seçimi</h2>
+
+                <!-- Templates -->
+                <div class="mb-lg">
+                    <h3 class="text-sm mb-sm">Hazır Şablonlar</h3>
+                    <div id="confluenceTemplates" class="strategy-checkboxes">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Saved Strategies -->
+                <div class="mb-lg">
+                    <h3 class="text-sm mb-sm">Kayıtlı Stratejilerim</h3>
+                    <div id="confluenceSaved" class="strategy-checkboxes">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Selected Count -->
+                <div class="alert alert-info">
+                    <strong>Seçili: <span id="confluenceSelectedCount">0</span> strateji</strong>
+                    <p class="text-sm mt-xs">En az 2 strateji seçmelisiniz</p>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="glass-card">
+                <h2 class="mb-md">⚙️ Ayarlar</h2>
+
+                <div class="form-group">
+                    <label class="form-label">Sembol</label>
+                    <input type="text" id="confluenceSymbol" class="form-input" value="EURUSD">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Zaman Dilimi</label>
+                    <select id="confluenceTimeframe" class="form-input">
+                        <option value="M5">M5 (5 Dakika)</option>
+                        <option value="M15">M15 (15 Dakika)</option>
+                        <option value="H1" selected>H1 (1 Saat)</option>
+                        <option value="H4">H4 (4 Saat)</option>
+                        <option value="D1">D1 (Günlük)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Minimum Uyum Oranı</label>
+                    <input type="range" id="minAgreementSlider" min="50" max="100" value="60" class="w-full">
+                    <div class="flex justify-between text-sm text-secondary">
+                        <span>50%</span>
+                        <span id="agreementValue">60%</span>
+                        <span>100%</span>
+                    </div>
+                    <p class="text-xs text-secondary mt-xs">En az bu kadar strateji aynı sinyali verdiğinde
+                        göster
+                    </p>
+                </div>
+
+                <button id="findConfluencesBtn" class="btn btn-primary w-full" onclick="findConfluences()" disabled>
+                    🔍 Confluence Bul
+                </button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="confluenceResults" class="mt-lg" style="display: none;">
+            <!-- Results will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Floating AI Chat Button -->
+    <button class="fab-ai" onclick="toggleChat()"
+        style="padding: 0; overflow: hidden; border: 2px solid var(--color-accent-purple);">
+        <img src="assets/jaguar_logo.jpg" alt="UceAsistan AI" style="width: 100%; height: 100%; object-fit: cover;">
+    </button>
+    </div><!-- Close appShell -->
+    <!-- Scripts -->
+    <script src="auth.js"></script>
+    <script src="utils.js"></script>
+    <script src="mt5-connector.js"></script>
+    <script src="risk-manager.js"></script>
+    <script src="ai-engine.js"></script>
+    <script src="dashboard.js"></script>
+    <script src="backtest.js"></script>
+    <script src="journal.js"></script>
+    <script src="journal_ui_helper.js"></script>
+    <script src="journal-analytics.js"></script>
+    <script src="confluence-finder.js"></script>
+    <script src="neural-pulse.js"></script>
+    <script src="market-terminal.js"></script>
+    <script src="mtf-recovery.js"></script>
+    <script src="app.js"></script>
+    <script src="strategies.js"></script>
+    <script src="enhanced-features.js"></script>
+    <script src="ai-editor.js"></script>
+</body>
+
+</html>

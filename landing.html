@@ -1,0 +1,2180 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UceAsistan | AI-Powered Trading Intelligence Platform</title>
+    <meta name="description"
+        content="Yapay zeka destekli trading koçunuz. MetaTrader 5 entegrasyonu, otomatik strateji oluşturma, prop firm kuralları takibi ve daha fazlası.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="assets/jaguar_logo.jpg">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="UceAsistan - Premium Trading Intelligence">
+    <meta property="og:description"
+        content="AI destekli trading koçunuz. Stratejilerinizi geliştirin, riskleri yönetin.">
+    <meta property="og:image" content="assets/jaguar_logo.jpg">
+    <meta property="og:type" content="website">
+
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f0f23;
+            --darker: #080816;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.4);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --gradient-gold: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--darker);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Background Effects */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(102, 126, 234, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(102, 126, 234, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .bg-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .bg-glow-1 {
+            top: -200px;
+            right: -200px;
+            background: var(--primary);
+        }
+
+        .bg-glow-2 {
+            bottom: -200px;
+            left: -200px;
+            background: var(--secondary);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 16px 0;
+            backdrop-filter: blur(20px);
+            background: rgba(8, 8, 22, 0.8);
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            padding: 12px 0;
+            background: rgba(8, 8, 22, 0.95);
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-cta {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary);
+        }
+
+        .btn-success {
+            background: var(--gradient-success);
+            color: white;
+        }
+
+        .btn-lg {
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            border-radius: 14px;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 120px 0 80px;
+            position: relative;
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--primary);
+            margin-bottom: 24px;
+        }
+
+        .hero-badge .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 span {
+            display: block;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-description {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            max-width: 500px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 48px;
+        }
+
+        .hero-stat {
+            text-align: left;
+        }
+
+        .hero-stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .hero-stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .hero-visual {
+            position: relative;
+        }
+
+        .hero-image-container {
+            position: relative;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+        }
+
+        .hero-mockup {
+            width: 100%;
+            background: var(--dark);
+            border-radius: 24px;
+            padding: 20px;
+        }
+
+        .mockup-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .mockup-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .mockup-dot.red {
+            background: #ff5f57;
+        }
+
+        .mockup-dot.yellow {
+            background: #ffbd2e;
+        }
+
+        .mockup-dot.green {
+            background: #28c840;
+        }
+
+        .mockup-content {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 300px;
+        }
+
+        .mockup-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 200px;
+            padding: 20px 0;
+        }
+
+        .mockup-bar {
+            flex: 1;
+            background: var(--gradient-primary);
+            border-radius: 4px 4px 0 0;
+            animation: grow 2s ease-out forwards;
+        }
+
+        @keyframes grow {
+            from {
+                height: 0;
+            }
+        }
+
+        .floating-card {
+            position: absolute;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .floating-card-1 {
+            top: 20%;
+            left: -60px;
+            animation-delay: 0s;
+        }
+
+        .floating-card-2 {
+            bottom: 20%;
+            right: -60px;
+            animation-delay: 1.5s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .floating-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .floating-icon.success {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        .floating-icon.primary {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .floating-text {
+            font-size: 0.85rem;
+        }
+
+        .floating-text strong {
+            display: block;
+            font-size: 1rem;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 100px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-tag {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--primary);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .section-description {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            background: var(--gradient-primary);
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            padding: 80px 0;
+            background: linear-gradient(180deg, transparent, rgba(102, 126, 234, 0.03), transparent);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 32px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 900;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 100px 0;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        .pricing-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .pricing-card.popular {
+            border-color: var(--primary);
+            background: linear-gradient(180deg, rgba(102, 126, 234, 0.1), transparent);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 20px;
+            background: var(--gradient-primary);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .pricing-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .pricing-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+
+        .pricing-price {
+            font-size: 3.5rem;
+            font-weight: 900;
+        }
+
+        .pricing-price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 32px;
+        }
+
+        .pricing-features li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .pricing-features li::before {
+            content: '✓';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border-radius: 50%;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .pricing-features li.disabled {
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .pricing-features li.disabled::before {
+            content: '✕';
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .pricing-cta {
+            width: 100%;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            padding: 100px 0;
+            background: linear-gradient(180deg, transparent, rgba(102, 126, 234, 0.03), transparent);
+        }
+
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .testimonial-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 32px;
+        }
+
+        .testimonial-stars {
+            color: #fbbf24;
+            margin-bottom: 16px;
+            font-size: 1.2rem;
+        }
+
+        .testimonial-text {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .testimonial-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .testimonial-info {
+            font-size: 0.9rem;
+        }
+
+        .testimonial-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .testimonial-role {
+            color: var(--text-muted);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 100px 0;
+        }
+
+        .cta-box {
+            background: var(--gradient-primary);
+            border-radius: 32px;
+            padding: 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .cta-description {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 32px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .cta-buttons .btn {
+            background: white;
+            color: var(--primary);
+        }
+
+        .cta-buttons .btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .cta-buttons .btn-outline {
+            background: transparent;
+            color: white;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .cta-buttons .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Footer */
+        .footer {
+            padding: 60px 0 30px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 48px;
+            margin-bottom: 48px;
+        }
+
+        .footer-brand {
+            max-width: 300px;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .footer-logo img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+        }
+
+        .footer-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        .footer-title {
+            font-weight: 700;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            padding-top: 30px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-copyright {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 16px;
+        }
+
+        .footer-social a {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-social a:hover {
+            color: var(--primary);
+        }
+
+        /* Newsletter Form */
+        .newsletter-form {
+            margin-top: 20px;
+        }
+
+        .newsletter-input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .newsletter-input {
+            flex: 1;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .newsletter-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .newsletter-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .newsletter-btn {
+            padding: 12px 20px;
+            background: var(--gradient-primary);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .newsletter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 100px 0;
+            background: linear-gradient(180deg, transparent, rgba(102, 126, 234, 0.03), transparent);
+        }
+
+        .steps-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+        }
+
+        .step-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 40px 32px;
+            text-align: center;
+            flex: 1;
+            max-width: 300px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .step-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
+        }
+
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .step-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .step-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .step-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .step-connector {
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+        }
+
+        .connector-line {
+            width: 40px;
+            height: 2px;
+            background: var(--border-color);
+        }
+
+        .connector-arrow {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-left: -8px;
+        }
+
+        /* Integrations Section */
+        .integrations {
+            padding: 100px 0;
+        }
+
+        .integrations-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .integration-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .integration-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+        }
+
+        .integration-logo {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .integration-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+
+        .integration-status {
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: 100px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            display: inline-block;
+        }
+
+        .integration-status.active {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        /* FAQ Section */
+        .faq {
+            padding: 100px 0;
+            background: linear-gradient(180deg, transparent, rgba(102, 126, 234, 0.03), transparent);
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item:hover {
+            border-color: var(--primary);
+        }
+
+        .faq-item.active {
+            border-color: var(--primary);
+        }
+
+        .faq-question {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+
+        .faq-toggle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(102, 126, 234, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item.active .faq-toggle {
+            transform: rotate(45deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 300px;
+        }
+
+        .faq-answer p {
+            padding: 0 24px 24px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* Demo Section */
+        .demo-section {
+            padding: 100px 0;
+        }
+
+        .demo-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 60px;
+        }
+
+        .demo-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 16px 0;
+        }
+
+        .demo-description {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 32px;
+        }
+
+        .demo-features {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .demo-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+        }
+
+        .demo-feature-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        .demo-form {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-select {
+            cursor: pointer;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-note {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 16px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-description {
+                margin: 0 auto 32px;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .hero-stats {
+                justify-content: center;
+            }
+
+            .hero-visual {
+                display: none;
+            }
+
+            .features-grid,
+            .pricing-grid,
+            .testimonial-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .footer-brand {
+                max-width: none;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .cta-box {
+                padding: 40px 24px;
+            }
+
+            .cta-title {
+                font-size: 1.8rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .steps-container {
+                flex-direction: column;
+                gap: 24px;
+            }
+
+            .step-connector {
+                transform: rotate(90deg);
+                padding: 8px 0;
+            }
+
+            .integrations-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .demo-container {
+                grid-template-columns: 1fr;
+                padding: 32px;
+            }
+
+            .demo-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Background Effects -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <a href="#" class="logo">
+                    <img src="assets/jaguar_logo.jpg" alt="UceAsistan Logo">
+                    UceAsistan
+                </a>
+
+                <ul class="nav-links">
+                    <li><a href="#features">Özellikler</a></li>
+                    <li><a href="#pricing">Fiyatlandırma</a></li>
+                    <li><a href="#testimonials">Yorumlar</a></li>
+                    <li><a href="#faq">SSS</a></li>
+                </ul>
+
+                <div class="nav-cta">
+                    <a href="index.html" class="btn btn-outline">Giriş Yap</a>
+                    <a href="index.html" class="btn btn-primary">Ücretsiz Başla</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <div class="hero-badge">
+                        <span class="dot"></span>
+                        Yeni: Global Confluence Radar ile 20+ sembol tarama
+                    </div>
+
+                    <h1>
+                        Trading'de Yapay Zeka
+                        <span>Devrimi Başlıyor</span>
+                    </h1>
+
+                    <p class="hero-description">
+                        AI destekli strateji oluşturma, otomatik risk yönetimi ve prop firm kuralları takibi.
+                        MetaTrader 5 ile tam entegre çalışan profesyonel trading platformu.
+                    </p>
+
+                    <div class="hero-buttons">
+                        <a href="index.html" class="btn btn-primary btn-lg">
+                            🚀 7 Gün Ücretsiz Dene
+                        </a>
+                        <a href="#demo" class="btn btn-outline btn-lg">
+                            ▶️ Demo İzle
+                        </a>
+                    </div>
+
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <div class="hero-stat-value">5K+</div>
+                            <div class="hero-stat-label">Aktif Trader</div>
+                        </div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-value">98%</div>
+                            <div class="hero-stat-label">Memnuniyet</div>
+                        </div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-value">24/7</div>
+                            <div class="hero-stat-label">Destek</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-visual">
+                    <div class="hero-image-container">
+                        <div class="hero-mockup">
+                            <div class="mockup-header">
+                                <div class="mockup-dot red"></div>
+                                <div class="mockup-dot yellow"></div>
+                                <div class="mockup-dot green"></div>
+                            </div>
+                            <div class="mockup-content">
+                                <div class="mockup-chart">
+                                    <div class="mockup-bar" style="height: 60%;"></div>
+                                    <div class="mockup-bar" style="height: 45%;"></div>
+                                    <div class="mockup-bar" style="height: 75%;"></div>
+                                    <div class="mockup-bar" style="height: 55%;"></div>
+                                    <div class="mockup-bar" style="height: 85%;"></div>
+                                    <div class="mockup-bar" style="height: 65%;"></div>
+                                    <div class="mockup-bar" style="height: 90%;"></div>
+                                    <div class="mockup-bar" style="height: 70%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="floating-card floating-card-1">
+                        <div class="floating-icon success">📈</div>
+                        <div class="floating-text">
+                            <strong>+15.4%</strong>
+                            Bu Ay Getiri
+                        </div>
+                    </div>
+
+                    <div class="floating-card floating-card-2">
+                        <div class="floating-icon primary">🤖</div>
+                        <div class="floating-text">
+                            <strong>AI Strateji</strong>
+                            Otomatik Oluşturma
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-tag">Özellikler</div>
+                <h2 class="section-title">Profesyonel Trading Araçları</h2>
+                <p class="section-description">
+                    Yapay zeka destekli araçlarla trading performansınızı bir üst seviyeye taşıyın
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3 class="feature-title">AI Strateji Wizard</h3>
+                    <p class="feature-description">
+                        Doğal dille stratejinizi tanımlayın, AI otomatik Python kodu oluştursun. Groq, OpenAI ve Gemini
+                        desteği.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">Neural Pulse Terminal</h3>
+                    <p class="feature-description">
+                        Bloomberg tarzı market terminali. Gerçek zamanlı fiyatlar, Smart Money Concepts analizi.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3 class="feature-title">Confluence Radar</h3>
+                    <p class="feature-description">
+                        20+ sembolde eş zamanlı strateji tarama. En yüksek confluence skorlu fırsatları yakalayın.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚠️</div>
+                    <h3 class="feature-title">Risk Guardian</h3>
+                    <p class="feature-description">
+                        Prop firm kuralları otomatik takibi. FTMO, TopStep, FundedNext uyarı sistemi.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3 class="feature-title">Smart Journal</h3>
+                    <p class="feature-description">
+                        Otomatik trade günlüğü ve AI destekli performans analizi. Zayıf noktalarınızı keşfedin.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3 class="feature-title">Telegram Alerts</h3>
+                    <p class="feature-description">
+                        Gerçek zamanlı sinyal ve risk bildirimleri. Trade açıldığında, kapandığında anında haberdar
+                        olun.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">50K+</div>
+                    <div class="stat-label">Çalıştırılan Backtest</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">1M+</div>
+                    <div class="stat-label">AI Strateji İsteği</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">99.9%</div>
+                    <div class="stat-label">Uptime Garantisi</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">15+</div>
+                    <div class="stat-label">Prop Firm Desteği</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-tag">Fiyatlandırma</div>
+                <h2 class="section-title">Basit ve Şeffaf Fiyatlandırma</h2>
+                <p class="section-description">
+                    İhtiyacınıza uygun planı seçin. 7 gün ücretsiz deneme ile başlayın.
+                </p>
+            </div>
+
+            <div class="pricing-grid">
+                <!-- Free Plan -->
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3 class="pricing-name">Ücretsiz</h3>
+                        <p class="pricing-description">Yeni başlayanlar için ideal</p>
+                        <div class="pricing-price">$0<span>/ay</span></div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>3 Strateji Limiti</li>
+                        <li>5 Sembol Takibi</li>
+                        <li>10 AI İstek/Ay</li>
+                        <li>Temel Dashboard</li>
+                        <li>Backtest Motoru</li>
+                        <li class="disabled">Canlı Trading</li>
+                        <li class="disabled">Confluence Radar</li>
+                        <li class="disabled">Prop Firm Kuralları</li>
+                        <li class="disabled">Telegram Bildirimleri</li>
+                    </ul>
+                    <a href="index.html" class="btn btn-outline pricing-cta">Ücretsiz Başla</a>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="pricing-card popular">
+                    <div class="popular-badge">En Popüler</div>
+                    <div class="pricing-header">
+                        <h3 class="pricing-name">Pro</h3>
+                        <p class="pricing-description">Ciddi traderlar için</p>
+                        <div class="pricing-price">$49<span>/ay</span></div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>20 Strateji</li>
+                        <li>30 Sembol Takibi</li>
+                        <li>500 AI İstek/Ay</li>
+                        <li>Neural Pulse Terminal</li>
+                        <li>Canlı Trading</li>
+                        <li>Confluence Radar</li>
+                        <li>Prop Firm Kuralları</li>
+                        <li>Telegram Bildirimleri</li>
+                        <li>Öncelikli Destek</li>
+                    </ul>
+                    <a href="index.html" class="btn btn-primary pricing-cta">7 Gün Ücretsiz Dene</a>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3 class="pricing-name">Kurumsal</h3>
+                        <p class="pricing-description">Prop firmlar ve fonlar için</p>
+                        <div class="pricing-price">$199<span>/ay</span></div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>Sınırsız Strateji</li>
+                        <li>Sınırsız Sembol</li>
+                        <li>Sınırsız AI İstek</li>
+                        <li>Tüm Pro Özellikler</li>
+                        <li>Çoklu Hesap Yönetimi</li>
+                        <li>White-label Seçeneği</li>
+                        <li>Özel API Erişimi</li>
+                        <li>Dedicated Destek</li>
+                        <li>SLA Garantisi</li>
+                    </ul>
+                    <a href="mailto:enterprise@uceasistan.com" class="btn btn-outline pricing-cta">İletişime Geç</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials" id="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-tag">Kullanıcı Yorumları</div>
+                <h2 class="section-title">Traderlar Ne Diyor?</h2>
+            </div>
+
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">
+                        "AI strateji oluşturma özelliği inanılmaz. Doğal dille strateji tanımlayıp
+                        saniyeler içinde çalışan kod almak mükemmel bir deneyim."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">AK</div>
+                        <div class="testimonial-info">
+                            <div class="testimonial-name">Ahmet K.</div>
+                            <div class="testimonial-role">FTMO Funded Trader</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">
+                        "Prop firm kuralları takibi sayesinde hesabımı kaybetme stresinden kurtuldum.
+                        Drawdown uyarıları gerçekten hayat kurtarıyor."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">MY</div>
+                        <div class="testimonial-info">
+                            <div class="testimonial-name">Mehmet Y.</div>
+                            <div class="testimonial-role">Full-time Trader</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">
+                        "Confluence Radar ile birden fazla stratejinin aynı anda sinyal verdiği
+                        anları yakalamak başarı oranımı ciddi şekilde artırdı."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">SB</div>
+                        <div class="testimonial-info">
+                            <div class="testimonial-name">Selin B.</div>
+                            <div class="testimonial-role">Swing Trader</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-tag">Nasıl Çalışır</div>
+                <h2 class="section-title">3 Adımda Başlayın</h2>
+                <p class="section-description">
+                    Dakikalar içinde profesyonel trading araçlarına erişin
+                </p>
+            </div>
+
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">📝</div>
+                    <h3 class="step-title">Hesap Oluşturun</h3>
+                    <p class="step-description">
+                        E-posta adresinizle saniyeler içinde kayıt olun.
+                        7 gün ücretsiz Pro deneme otomatik başlar.
+                    </p>
+                </div>
+
+                <div class="step-connector">
+                    <div class="connector-line"></div>
+                    <div class="connector-arrow">→</div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">🔗</div>
+                    <h3 class="step-title">MT5'i Bağlayın</h3>
+                    <p class="step-description">
+                        MetaTrader 5 terminalinizi tek tıkla bağlayın.
+                        API anahtarlarınızı güvenle saklayın.
+                    </p>
+                </div>
+
+                <div class="step-connector">
+                    <div class="connector-line"></div>
+                    <div class="connector-arrow">→</div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">🚀</div>
+                    <h3 class="step-title">Trading'e Başlayın</h3>
+                    <p class="step-description">
+                        AI ile strateji oluşturun, backtest yapın ve
+                        canlı piyasalarda trade açın.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integrations Section -->
+    <section class="integrations">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-tag">Entegrasyonlar</div>
+                <h2 class="section-title">Güçlü Bağlantılar</h2>
+                <p class="section-description">
+                    Favori araçlarınız ve platformlarınızla sorunsuz entegrasyon
+                </p>
+            </div>
+
+            <div class="integrations-grid">
+                <div class="integration-card">
+                    <div class="integration-logo">📊</div>
+                    <div class="integration-name">MetaTrader 5</div>
+                    <div class="integration-status active">Aktif</div>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-logo">🤖</div>
+                    <div class="integration-name">OpenAI / GPT</div>
+                    <div class="integration-status active">Aktif</div>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-logo">⚡</div>
+                    <div class="integration-name">Groq AI</div>
+                    <div class="integration-status active">Aktif</div>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-logo">💎</div>
+                    <div class="integration-name">Google Gemini</div>
+                    <div class="integration-status active">Aktif</div>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-logo">📱</div>
+                    <div class="integration-name">Telegram</div>
+                    <div class="integration-status active">Aktif</div>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-logo">🏦</div>
+                    <div class="integration-name">FTMO</div>
+                    <div class="integration-status">Desteklenen</div>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-logo">🎯</div>
+                    <div class="integration-name">TopStep</div>
+                    <div class="integration-status">Desteklenen</div>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-logo">💰</div>
+                    <div class="integration-name">FundedNext</div>
+                    <div class="integration-status">Desteklenen</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq" id="faq">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-tag">SSS</div>
+                <h2 class="section-title">Sıkça Sorulan Sorular</h2>
+            </div>
+
+            <div class="faq-container">
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>UceAsistan ücretsiz mi?</span>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Evet! Ücretsiz plan ile 3 strateji, 5 sembol takibi ve ayda 10 AI isteği kullanabilirsiniz.
+                            Tüm Pro özelliklerini denemek için 7 günlük ücretsiz deneme de sunuyoruz - kredi kartı
+                            gerekmez.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>MetaTrader 4 destekleniyor mu?</span>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Şu anda sadece MetaTrader 5 desteklenmektedir. MT5'in Python API desteği sayesinde
+                            daha gelişmiş özellikler sunabiliyoruz. MT4 desteği yol haritamızda bulunmaktadır.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>AI stratejileri gerçekten çalışıyor mu?</span>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>AI, sizin tanımladığınız kurallara göre Python kodu üretir. Her stratejiyi backtest
+                            motorumuza çalıştırarak geçmiş performansını görebilirsiniz. Canlıya almadan önce
+                            kapsamlı test yapmanızı öneririz. Hiçbir strateji %100 garantili değildir.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Prop firm hesabımla kullanabilir miyim?</span>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Kesinlikle! FTMO, TopStep, FundedNext, The5ers ve daha birçok prop firm'in kurallarını
+                            otomatik takip ediyoruz. Drawdown uyarıları, günlük kayıp limitleri ve işlem kuralları
+                            gerçek zamanlı olarak izlenir.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Verilerim güvende mi?</span>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Tüm veriler 256-bit SSL şifreleme ile korunur. API anahtarlarınız yerel olarak saklanır
+                            ve sunucularımıza gönderilmez. Trading geçmişiniz sadece sizin erişebileceğiniz şekilde
+                            şifrelenir.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>İptal politikası nedir?</span>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>İstediğiniz zaman iptal edebilirsiniz, herhangi bir cayma bedeli yoktur.
+                            Aylık ödeme yaparsanız dönem sonuna kadar erişiminiz devam eder.
+                            14 gün içinde tam iade garantisi sunuyoruz.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Request Section -->
+    <section class="demo-section" id="demo">
+        <div class="container">
+            <div class="demo-container">
+                <div class="demo-content">
+                    <div class="section-tag">Demo</div>
+                    <h2 class="demo-title">Canlı Demo Talep Edin</h2>
+                    <p class="demo-description">
+                        Uzman ekibimizle birebir görüşme yapın. Tüm özellikleri
+                        canlı olarak gösterin ve sorularınızı yanıtlayalım.
+                    </p>
+
+                    <div class="demo-features">
+                        <div class="demo-feature">
+                            <span class="demo-feature-icon">✓</span>
+                            <span>30 dakikalık özel sunum</span>
+                        </div>
+                        <div class="demo-feature">
+                            <span class="demo-feature-icon">✓</span>
+                            <span>Stratejinize özel öneriler</span>
+                        </div>
+                        <div class="demo-feature">
+                            <span class="demo-feature-icon">✓</span>
+                            <span>Kurulum desteği</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form class="demo-form" onsubmit="handleDemoRequest(event)">
+                    <div class="form-group">
+                        <label class="form-label">Ad Soyad</label>
+                        <input type="text" class="form-input" placeholder="Adınız Soyadınız" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">E-posta</label>
+                        <input type="email" class="form-input" placeholder="ornek@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Telefon (Opsiyonel)</label>
+                        <input type="tel" class="form-input" placeholder="+90 5XX XXX XX XX">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">İlgilendiğiniz Plan</label>
+                        <select class="form-select">
+                            <option value="pro">Pro Plan</option>
+                            <option value="enterprise">Kurumsal Plan</option>
+                            <option value="undecided">Henüz karar vermedim</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mesajınız (Opsiyonel)</label>
+                        <textarea class="form-textarea" rows="3"
+                            placeholder="Özel talepleriniz veya sorularınız..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                        📅 Demo Randevusu Al
+                    </button>
+                    <p class="form-note">24 saat içinde size dönüş yapacağız</p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-box">
+                <div class="cta-content">
+                    <h2 class="cta-title">Trading Yolculuğunuza Bugün Başlayın</h2>
+                    <p class="cta-description">
+                        7 gün ücretsiz deneme ile tüm Pro özelliklere erişin.
+                        Kredi kartı gerekmez.
+                    </p>
+                    <div class="cta-buttons">
+                        <a href="index.html" class="btn btn-lg">🚀 Hemen Başla</a>
+                        <a href="#demo" class="btn btn-outline btn-lg">📞 Demo Talep Et</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <img src="assets/jaguar_logo.jpg" alt="UceAsistan">
+                        UceAsistan
+                    </div>
+                    <p class="footer-description">
+                        AI destekli trading koçunuz. Profesyonel araçlarla
+                        trading performansınızı bir üst seviyeye taşıyın.
+                    </p>
+
+                    <!-- Newsletter Signup -->
+                    <form class="newsletter-form" onsubmit="handleNewsletterSubmit(event)">
+                        <h4 class="footer-title" style="margin-top: 24px;">📬 Bülten</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                            Yeni özellikler ve trading ipuçları için abone olun
+                        </p>
+                        <div class="newsletter-input-group">
+                            <input type="email" placeholder="E-posta adresiniz" class="newsletter-input" required>
+                            <button type="submit" class="newsletter-btn">Abone Ol</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div>
+                    <h4 class="footer-title">Ürün</h4>
+                    <ul class="footer-links">
+                        <li><a href="#features">Özellikler</a></li>
+                        <li><a href="#pricing">Fiyatlandırma</a></li>
+                        <li><a href="#">Güncellemeler</a></li>
+                        <li><a href="#">Yol Haritası</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="footer-title">Kaynaklar</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Dokümantasyon</a></li>
+                        <li><a href="#">API</a></li>
+                        <li><a href="#">Videolar</a></li>
+                        <li><a href="#">Blog</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="footer-title">Şirket</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Hakkımızda</a></li>
+                        <li><a href="#">İletişim</a></li>
+                        <li><a href="#">Gizlilik Politikası</a></li>
+                        <li><a href="#">Kullanım Şartları</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div class="footer-copyright">
+                    © 2024 UceAsistan. Tüm hakları saklıdır.
+                </div>
+                <div class="footer-social">
+                    <a href="#">📧</a>
+                    <a href="#">💬</a>
+                    <a href="#">📱</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Newsletter System -->
+    <script src="newsletter.js"></script>
+
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Animate elements on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .pricing-card, .testimonial-card, .stat-card, .step-card, .integration-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'all 0.6s ease-out';
+            observer.observe(el);
+        });
+
+        // FAQ Toggle Function
+        function toggleFaq(element) {
+            // Close other open FAQs
+            document.querySelectorAll('.faq-item.active').forEach(item => {
+                if (item !== element) {
+                    item.classList.remove('active');
+                }
+            });
+            // Toggle current FAQ
+            element.classList.toggle('active');
+        }
+
+        // Demo Form Handler
+        function handleDemoRequest(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            // Show success message
+            const btn = form.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ Talebiniz Alındı!';
+            btn.style.background = 'var(--gradient-success)';
+            btn.disabled = true;
+
+            // Reset form
+            setTimeout(() => {
+                form.reset();
+                btn.innerHTML = originalText;
+                btn.style.background = '';
+                btn.disabled = false;
+            }, 3000);
+
+            // In production, send to backend
+            console.log('Demo request submitted');
+        }
+
+        // Counter animation for stats
+        function animateCounter(element, target) {
+            let current = 0;
+            const increment = target / 50;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                element.textContent = Math.floor(current).toLocaleString();
+            }, 30);
+        }
+
+        // Typed effect for hero (optional enhancement)
+        const heroTitle = document.querySelector('.hero h1 span');
+        if (heroTitle) {
+            heroTitle.style.opacity = '0';
+            setTimeout(() => {
+                heroTitle.style.opacity = '1';
+                heroTitle.style.transition = 'opacity 1s ease';
+            }, 500);
+        }
+    </script>
+</body>
+
+</html>

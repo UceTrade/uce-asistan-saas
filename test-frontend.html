@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Test - AI Trading Coach</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+            color: #fff;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .test-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 3px solid #666;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .test-item.pass {
+            border-left-color: #00ff88;
+        }
+
+        .test-item.fail {
+            border-left-color: #ff4444;
+        }
+
+        .test-item.pending {
+            border-left-color: #ffaa00;
+        }
+
+        h1 {
+            color: #00ff88;
+        }
+
+        h2 {
+            color: #4da6ff;
+            margin-top: 0;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .status.pass {
+            background: #00ff88;
+            color: #000;
+        }
+
+        .status.fail {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        .status.pending {
+            background: #ffaa00;
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>AI Trading Coach - Frontend Test</h1>
+
+    <div class="test-section">
+        <h2>1. JavaScript Files</h2>
+        <div id="jsFiles"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. WebSocket Connection</h2>
+        <div id="wsTest"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Module Loading</h2>
+        <div id="moduleTest"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Summary</h2>
+        <div id="summary"></div>
+    </div>
+
+    <script>
+        const results = {
+            jsFiles: [],
+            wsConnection: null,
+            modules: []
+        };
+
+        // Test 1: Check if JS files exist
+        const jsFiles = [
+            'app.js',
+            'backtest.js',
+            'dashboard.js',
+            'journal.js',
+            'strategies.js',
+            'mt5-connector.js',
+            'utils.js',
+            'ai-engine.js',
+            'ai-editor.js',
+            'risk-manager.js',
+            'enhanced-features.js',
+            'confluence-finder.js'
+        ];
+
+        function testJSFiles() {
+            const container = document.getElementById('jsFiles');
+            let html = '';
+
+            jsFiles.forEach(file => {
+                fetch(file, { method: 'HEAD' })
+                    .then(response => {
+                        const status = response.ok ? 'pass' : 'fail';
+                        results.jsFiles.push({ file, status });
+                        html += `<div class="test-item ${status}">
+                            <span class="status ${status}">${response.ok ? 'OK' : 'FAIL'}</span>
+                            ${file} ${response.ok ? '' : '(Not Found)'}
+                        </div>`;
+                        container.innerHTML = html;
+                        updateSummary();
+                    })
+                    .catch(err => {
+                        results.jsFiles.push({ file, status: 'fail' });
+                        html += `<div class="test-item fail">
+                            <span class="status fail">FAIL</span>
+                            ${file} (Error: ${err.message})
+                        </div>`;
+                        container.innerHTML = html;
+                        updateSummary();
+                    });
+            });
+        }
+
+        // Test 2: WebSocket Connection
+        function testWebSocket() {
+            const container = document.getElementById('wsTest');
+            container.innerHTML = '<div class="test-item pending"><span class="status pending">TESTING</span>Connecting to ws://localhost:8766...</div>';
+
+            try {
+                const ws = new WebSocket('ws://localhost:8766');
+
+                ws.onopen = () => {
+                    results.wsConnection = 'pass';
+                    container.innerHTML = '<div class="test-item pass"><span class="status pass">OK</span>WebSocket connected successfully</div>';
+                    ws.close();
+                    updateSummary();
+                };
+
+                ws.onerror = (error) => {
+                    results.wsConnection = 'fail';
+                    container.innerHTML = '<div class="test-item fail"><span class="status fail">FAIL</span>WebSocket connection failed (Is backend running?)</div>';
+                    updateSummary();
+                };
+
+                ws.onclose = () => {
+                    if (results.wsConnection === null) {
+                        results.wsConnection = 'fail';
+                        container.innerHTML = '<div class="test-item fail"><span class="status fail">FAIL</span>WebSocket closed before connection (Backend not running)</div>';
+                        updateSummary();
+                    }
+                };
+
+                // Timeout after 3 seconds
+                setTimeout(() => {
+                    if (results.wsConnection === null) {
+                        results.wsConnection = 'fail';
+                        container.innerHTML = '<div class="test-item fail"><span class="status fail">FAIL</span>WebSocket connection timeout</div>';
+                        ws.close();
+                        updateSummary();
+                    }
+                }, 3000);
+
+            } catch (error) {
+                results.wsConnection = 'fail';
+                container.innerHTML = `<div class="test-item fail"><span class="status fail">FAIL</span>WebSocket error: ${error.message}</div>`;
+                updateSummary();
+            }
+        }
+
+        // Test 3: Module Loading
+        function testModules() {
+            const container = document.getElementById('moduleTest');
+            const modules = [
+                { name: 'Chart.js', check: () => typeof Chart !== 'undefined' }
+            ];
+
+            let html = '';
+            modules.forEach(mod => {
+                const status = mod.check() ? 'pass' : 'fail';
+                results.modules.push({ name: mod.name, status });
+                html += `<div class="test-item ${status}">
+                    <span class="status ${status}">${status === 'pass' ? 'OK' : 'FAIL'}</span>
+                    ${mod.name}
+                </div>`;
+            });
+
+            container.innerHTML = html;
+            updateSummary();
+        }
+
+        // Update Summary
+        function updateSummary() {
+            const container = document.getElementById('summary');
+
+            const jsPass = results.jsFiles.filter(r => r.status === 'pass').length;
+            const jsTotal = jsFiles.length;
+            const wsStatus = results.wsConnection;
+            const modPass = results.modules.filter(r => r.status === 'pass').length;
+            const modTotal = results.modules.length;
+
+            let html = `
+                <div style="font-size: 18px;">
+                    <div>JavaScript Files: ${jsPass}/${jsTotal} OK</div>
+                    <div>WebSocket: ${wsStatus === 'pass' ? 'Connected' : wsStatus === 'fail' ? 'Failed' : 'Testing...'}</div>
+                    <div>Modules: ${modPass}/${modTotal} OK</div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Run all tests
+        window.onload = () => {
+            testJSFiles();
+            testWebSocket();
+            testModules();
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,83 @@
+[
+  {
+    "id": "user_5847ee44",
+    "name": "lolo",
+    "description": "test",
+    "code": "import pandas as pd\nimport numpy as np\n\ndef strategy(data, position):\n    # Ensure we have enough data\n    if len(data) < 50:\n        return 'HOLD'\n    \n    df = pa.analyze_all(data)\n    \n    trend = df['trend_bias'].iloc[-1] if 'trend_bias' in df.columns else 0\n    is_discount = df['is_discount'].iloc[-1] if 'is_discount' in df.columns else False\n    is_premium = df['is_premium'].iloc[-1] if 'is_premium' in df.columns else False\n    bullish_fvg = df['bullish_fvg'].iloc[-1] if 'bullish_fvg' in df.columns else False\n    bearish_fvg = df['bearish_fvg'].iloc[-1] if 'bearish_fvg' in df.columns else False\n    bullish_ob = df['bullish_ob'].iloc[-1] if 'bullish_ob' in df.columns else False\n    bearish_ob = df['bearish_ob'].iloc[-1] if 'bearish_ob' in df.columns else False\n    \n    # Check for buy condition with 2 rr\n    if trend >= 0 and (is_discount or bullish_fvg or bullish_ob):\n        if position <= 0:\n            return 'BUY'\n    \n    # Check for sell condition with 2 rr\n    if trend <= 0 and (is_premium or bearish_fvg or bearish_ob):\n        if position >= 0:\n            return 'SELL'\n    \n    return 'HOLD'",
+    "timeframe": "H1",
+    "category": "Kullanıcı",
+    "created_at": "2025-12-25T00:51:57.003256"
+  },
+  {
+    "id": "user_b660b7c7",
+    "name": "lolo",
+    "description": "test",
+    "code": "import pandas as pd\nimport numpy as np\n\ndef strategy(data, position):\n    # Ensure we have enough data\n    if len(data) < 50:\n        return 'HOLD'\n    \n    df = pa.analyze_all(data)\n    \n    trend = df['trend_bias'].iloc[-1] if 'trend_bias' in df.columns else 0\n    is_discount = df['is_discount'].iloc[-1] if 'is_discount' in df.columns else False\n    is_premium = df['is_premium'].iloc[-1] if 'is_premium' in df.columns else False\n    bullish_fvg = df['bullish_fvg'].iloc[-1] if 'bullish_fvg' in df.columns else False\n    bearish_fvg = df['bearish_fvg'].iloc[-1] if 'bearish_fvg' in df.columns else False\n    bullish_ob = df['bullish_ob'].iloc[-1] if 'bullish_ob' in df.columns else False\n    bearish_ob = df['bearish_ob'].iloc[-1] if 'bearish_ob' in df.columns else False\n    \n    # Check for buy condition with 2 rr\n    if trend >= 0 and (is_discount or bullish_fvg or bullish_ob):\n        if position <= 0:\n            return 'BUY'\n    \n    # Check for sell condition with 2 rr\n    if trend <= 0 and (is_premium or bearish_fvg or bearish_ob):\n        if position >= 0:\n            return 'SELL'\n    \n    return 'HOLD'",
+    "timeframe": "H1",
+    "category": "Kullanıcı",
+    "created_at": "2025-12-25T00:52:01.629307"
+  },
+  {
+    "id": "user_e71be948",
+    "name": "test",
+    "description": "test",
+    "code": "import pandas as pd\nimport numpy as np\n\ndef strategy(data, position):\n    # Ensure we have enough data\n    if len(data) < 50:\n        return 'HOLD'\n    \n    df = pa.analyze_all(data)\n    \n    trend = df['trend_bias'].iloc[-1] if 'trend_bias' in df.columns else 0\n    is_discount = df['is_discount'].iloc[-1] if 'is_discount' in df.columns else False\n    is_premium = df['is_premium'].iloc[-1] if 'is_premium' in df.columns else False\n    bullish_fvg = df['bullish_fvg'].iloc[-1] if 'bullish_fvg' in df.columns else False\n    bearish_fvg = df['bearish_fvg'].iloc[-1] if 'bearish_fvg' in df.columns else False\n    bullish_ob = df['bullish_ob'].iloc[-1] if 'bullish_ob' in df.columns else False\n    bearish_ob = df['bearish_ob'].iloc[-1] if 'bearish_ob' in df.columns else False\n    \n    # Check for buy condition\n    if trend >= 0 and (is_discount or bullish_fvg or bullish_ob):\n        if position <= 0:\n            return 'BUY'\n    \n    # Check for sell condition\n    if trend <= 0 and (is_premium or bearish_fvg or bearish_ob):\n        if position >= 0:\n            return 'SELL'\n    \n    return 'HOLD'",
+    "timeframe": "H1",
+    "category": "Kullanıcı",
+    "created_at": "2025-12-25T00:52:28.569722"
+  },
+  {
+    "id": "user_7cc5d0b9",
+    "name": "test",
+    "description": "test",
+    "code": "import pandas as pd\nimport numpy as np\n\ndef strategy(data, position):\n    # Ensure we have enough data\n    if len(data) < 50:\n        return 'HOLD'\n    \n    df = pa.analyze_all(data)\n    \n    trend = df['trend_bias'].iloc[-1] if 'trend_bias' in df.columns else 0\n    is_discount = df['is_discount'].iloc[-1] if 'is_discount' in df.columns else False\n    is_premium = df['is_premium'].iloc[-1] if 'is_premium' in df.columns else False\n    bullish_fvg = df['bullish_fvg'].iloc[-1] if 'bullish_fvg' in df.columns else False\n    bearish_fvg = df['bearish_fvg'].iloc[-1] if 'bearish_fvg' in df.columns else False\n    bullish_ob = df['bullish_ob'].iloc[-1] if 'bullish_ob' in df.columns else False\n    bearish_ob = df['bearish_ob'].iloc[-1] if 'bearish_ob' in df.columns else False\n    \n    # Check for buy condition\n    if trend >= 0 and (is_discount or bullish_fvg or bullish_ob):\n        if position <= 0:\n            return 'BUY'\n    \n    # Check for sell condition\n    if trend <= 0 and (is_premium or bearish_fvg or bearish_ob):\n        if position >= 0:\n            return 'SELL'\n    \n    return 'HOLD'",
+    "timeframe": "H1",
+    "category": "Kullanıcı",
+    "created_at": "2025-12-25T00:52:30.047144"
+  },
+  {
+    "id": "user_f55e3b22",
+    "name": "Test Template",
+    "description": "ICT (Inner Circle Trader) konsepti olan Fair Value Gap stratejisi. Fiyat hızlı hareket ettiğinde oluşan boşlukları (FVG) tespit eder ve bu boşlukların doldurulmasını bekler. Bullish FVG'de alım, Bearish FVG'de satış sinyali verir.",
+    "code": "import pandas as pd\nimport numpy as np\n\ndef strategy(data, position):\n    \"\"\"ICT Fair Value Gap (FVG) Strategy\"\"\"\n    # Ensure we have enough data\n    if len(data) < 20:\n        return 'HOLD'\n    \n    # Use pre-calculated FVG from Price Action Library\n    # The backtest engine calls pa.analyze_all(data) before strategy execution\n    \n    # Get current values\n    current_price = data['close'].iloc[-1]\n    \n    # Check for Bullish FVG (buy opportunity)\n    if 'bullish_fvg' in data.columns:\n        bullish_fvg = data['bullish_fvg'].iloc[-1]\n        if bullish_fvg and position <= 0:\n            return 'BUY'\n    \n    # Check for Bearish FVG (sell opportunity)\n    if 'bearish_fvg' in data.columns:\n        bearish_fvg = data['bearish_fvg'].iloc[-1]\n        if bearish_fvg and position >= 0:\n            return 'SELL'\n    \n    return 'HOLD'\n",
+    "timeframe": "H1",
+    "category": "Kullanıcı",
+    "created_at": "2025-12-25T00:54:17.586673"
+  },
+  {
+    "id": "user_2641a7ce",
+    "name": "Test Template",
+    "description": "ICT (Inner Circle Trader) konsepti olan Fair Value Gap stratejisi. Fiyat hızlı hareket ettiğinde oluşan boşlukları (FVG) tespit eder ve bu boşlukların doldurulmasını bekler. Bullish FVG'de alım, Bearish FVG'de satış sinyali verir.",
+    "code": "import pandas as pd\nimport numpy as np\n\ndef strategy(data, position):\n    \"\"\"ICT Fair Value Gap (FVG) Strategy\"\"\"\n    # Ensure we have enough data\n    if len(data) < 20:\n        return 'HOLD'\n    \n    # Use pre-calculated FVG from Price Action Library\n    # The backtest engine calls pa.analyze_all(data) before strategy execution\n    \n    # Get current values\n    current_price = data['close'].iloc[-1]\n    \n    # Check for Bullish FVG (buy opportunity)\n    if 'bullish_fvg' in data.columns:\n        bullish_fvg = data['bullish_fvg'].iloc[-1]\n        if bullish_fvg and position <= 0:\n            return 'BUY'\n    \n    # Check for Bearish FVG (sell opportunity)\n    if 'bearish_fvg' in data.columns:\n        bearish_fvg = data['bearish_fvg'].iloc[-1]\n        if bearish_fvg and position >= 0:\n            return 'SELL'\n    \n    return 'HOLD'\n",
+    "timeframe": "H1",
+    "category": "Kullanıcı",
+    "created_at": "2025-12-25T00:54:50.897115"
+  },
+  {
+    "id": "user_9917e9f0",
+    "name": "Test Template",
+    "description": "ICT (Inner Circle Trader) konsepti olan Fair Value Gap stratejisi. Fiyat hızlı hareket ettiğinde oluşan boşlukları (FVG) tespit eder ve bu boşlukların doldurulmasını bekler. Bullish FVG'de alım, Bearish FVG'de satış sinyali verir.",
+    "code": "import pandas as pd\nimport numpy as np\n\ndef strategy(data, position):\n    \"\"\"ICT Fair Value Gap (FVG) Strategy\"\"\"\n    # Ensure we have enough data\n    if len(data) < 20:\n        return 'HOLD'\n    \n    # Use pre-calculated FVG from Price Action Library\n    # The backtest engine calls pa.analyze_all(data) before strategy execution\n    \n    # Get current values\n    current_price = data['close'].iloc[-1]\n    \n    # Check for Bullish FVG (buy opportunity)\n    if 'bullish_fvg' in data.columns:\n        bullish_fvg = data['bullish_fvg'].iloc[-1]\n        if bullish_fvg and position <= 0:\n            return 'BUY'\n    \n    # Check for Bearish FVG (sell opportunity)\n    if 'bearish_fvg' in data.columns:\n        bearish_fvg = data['bearish_fvg'].iloc[-1]\n        if bearish_fvg and position >= 0:\n            return 'SELL'\n    \n    return 'HOLD'\n",
+    "timeframe": "H1",
+    "category": "Kullanıcı",
+    "created_at": "2025-12-25T00:55:17.210291"
+  },
+  {
+    "id": "user_86005dd5",
+    "name": "Test Template",
+    "description": "ICT (Inner Circle Trader) konsepti olan Fair Value Gap stratejisi. Fiyat hızlı hareket ettiğinde oluşan boşlukları (FVG) tespit eder ve bu boşlukların doldurulmasını bekler. Bullish FVG'de alım, Bearish FVG'de satış sinyali verir.",
+    "code": "import pandas as pd\nimport numpy as np\n\ndef strategy(data, position):\n    \"\"\"ICT Fair Value Gap (FVG) Strategy\"\"\"\n    # Ensure we have enough data\n    if len(data) < 20:\n        return 'HOLD'\n    \n    # Use pre-calculated FVG from Price Action Library\n    # The backtest engine calls pa.analyze_all(data) before strategy execution\n    \n    # Get current values\n    current_price = data['close'].iloc[-1]\n    \n    # Check for Bullish FVG (buy opportunity)\n    if 'bullish_fvg' in data.columns:\n        bullish_fvg = data['bullish_fvg'].iloc[-1]\n        if bullish_fvg and position <= 0:\n            return 'BUY'\n    \n    # Check for Bearish FVG (sell opportunity)\n    if 'bearish_fvg' in data.columns:\n        bearish_fvg = data['bearish_fvg'].iloc[-1]\n        if bearish_fvg and position >= 0:\n            return 'SELL'\n    \n    return 'HOLD'\n",
+    "timeframe": "H1",
+    "category": "Kullanıcı",
+    "created_at": "2025-12-25T00:56:16.673296"
+  },
+  {
+    "id": "user_1bdafec4",
+    "name": "test",
+    "description": "test",
+    "code": "import pandas as pd\nimport numpy as np\n\ndef strategy(data, position):\n    # Ensure we have enough data\n    if len(data) < 50:\n        return 'HOLD'\n    \n    df = pa.analyze_all(data)\n    \n    # Get the LAST values using .iloc[-1]\n    trend = df['trend_bias'].iloc[-1] if 'trend_bias' in df.columns else 0\n    is_discount = df['is_discount'].iloc[-1] if 'is_discount' in df.columns else False\n    is_premium = df['is_premium'].iloc[-1] if 'is_premium' in df.columns else False\n    bullish_fvg = df['bullish_fvg'].iloc[-1] if 'bullish_fvg' in df.columns else False\n    bearish_fvg = df['bearish_fvg'].iloc[-1] if 'bearish_fvg' in df.columns else False\n    bullish_ob = df['bullish_ob'].iloc[-1] if 'bullish_ob' in df.columns else False\n    bearish_ob = df['bearish_ob'].iloc[-1] if 'bearish_ob' in df.columns else False\n    \n    # Check for buy condition with 2 RR\n    if trend >= 0 and (is_discount or bullish_fvg or bullish_ob) and position <= 0:\n        return 'BUY'\n    \n    # Check for sell condition with 2 RR\n    if trend <= 0 and (is_premium or bearish_fvg or bearish_ob) and position >= 0:\n        return 'SELL'\n    \n    return 'HOLD'",
+    "timeframe": "H1",
+    "category": "Kullanıcı",
+    "created_at": "2025-12-25T00:59:14.056839"
+  }
+]
