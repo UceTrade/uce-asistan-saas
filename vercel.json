@@ -1,15 +1,13 @@
 {
     "version": 2,
     "name": "uceasistan",
-    "buildCommand": null,
-    "outputDirectory": null,
     "rewrites": [
         {
-            "source": "/api/:path*",
-            "destination": "/backend/api.py"
+            "source": "/app",
+            "destination": "/index.html"
         },
         {
-            "source": "/app",
+            "source": "/app/(.*)",
             "destination": "/index.html"
         }
     ],

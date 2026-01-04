@@ -1,0 +1,22 @@
+# Backend - runs locally only
+backend/
+__pycache__/
+
+# Python files
+*.py
+*.pyc
+
+# Environment
+.env*
+
+# Development
+user_data/
+installer/
+docker/
+docs/
+*.md
+!README.md
+
+# Git
+.git/
+.github/
