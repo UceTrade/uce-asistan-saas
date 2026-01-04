@@ -1,51 +1,25 @@
 {
     "version": 2,
     "name": "uceasistan",
-    "builds": [
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rewrites": [
         {
-            "src": "backend/api.py",
-            "use": "@vercel/python"
+            "source": "/api/:path*",
+            "destination": "/backend/api.py"
         },
         {
-            "src": "**/*.html",
-            "use": "@vercel/static"
-        },
-        {
-            "src": "**/*.css",
-            "use": "@vercel/static"
-        },
-        {
-            "src": "**/*.js",
-            "use": "@vercel/static"
-        },
-        {
-            "src": "assets/**",
-            "use": "@vercel/static"
+            "source": "/app",
+            "destination": "/index.html"
         }
     ],
-    "routes": [
+    "redirects": [
         {
-            "src": "/api/(.*)",
-            "dest": "backend/api.py"
-        },
-        {
-            "src": "/",
-            "dest": "/landing.html"
-        },
-        {
-            "src": "/app",
-            "dest": "/index.html"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/$1"
+            "source": "/",
+            "destination": "/landing.html",
+            "permanent": false
         }
     ],
-    "env": {
-        "GROQ_API_KEY": "@groq_api_key",
-        "SUPABASE_URL": "@supabase_url",
-        "SUPABASE_KEY": "@supabase_key"
-    },
     "headers": [
         {
             "source": "/(.*)",
