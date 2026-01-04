@@ -342,14 +342,51 @@ class UceAuth {
         return SUBSCRIPTION_TIERS;
     }
 
-    getSubscriptionDetails() {
-        return this.user ? {
-            ...this.user.subscription,
-            tierConfig: this.getTierConfig(),
-            expirationWarning: this.checkExpirationWarning(),
-            remainingAIRequests: this.getRemainingAIRequests()
-        } : null;
+    async updateSubscriptionTier(newTier) {
+        if (!SUBSCRIPTION_TIERS[newTier]) {
+            console.error(`Invalid tier: ${newTier}`);
+            return { success: false, error: 'Geçersiz paket' };
+        }
+
+        console.log(`Updating subscription to: ${newTier}`);
+
+        // Update local session
+        if (this.user) {
+            this.user.subscription.tier = newTier;
+            this.user.subscription.plan = SUBSCRIPTION_TIERS[newTier].displayName;
+            this.user.subscription.isActive = true;
+
+            // Set expiry date (1 year from now for simplicity)
+            const expiry = new Date();
+            expiry.setFullYear(expiry.getFullYear() + 1);
+            this.user.subscription.expiry = expiry.toISOString().split('T')[0];
+            this.user.subscription.isTrial = false;
+            this.user.subscription.aiRequestsLimit = SUBSCRIPTION_TIERS[newTier].aiRequests;
+
+            saveToStorage('uce_session', this.user);
+        }
+
+        // Update Supabase if connected
+        if (this.supabase && this.user) {
+            try {
+                const { error } = await this.supabase
+                    .from('profiles')
+                    .update({
+                        subscription_tier: newTier,
+                        subscription_expires_at: this.user.subscription.expiry
+                    })
+                    .eq('id', this.user.id);
+
+                if (error) throw error;
+            } catch (error) {
+                console.error('Supabase update error:', error);
+                // We still returned success because local state is updated
+            }
+        }
+
+        return { success: true, tier: newTier };
     }
+
 
     logout() {
         this.user = null;
