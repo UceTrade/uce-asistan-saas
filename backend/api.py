@@ -163,7 +163,7 @@ async def health_check():
 async def get_account_info():
     """Get current MT5 account information."""
     try:
-        import MetaTrader5 as mt5
+        from mt5_proxy import mt5
         
         if not mt5.initialize():
             raise HTTPException(status_code=503, detail="MT5 not initialized")
@@ -191,7 +191,7 @@ async def get_account_info():
 async def get_positions():
     """Get current open positions."""
     try:
-        import MetaTrader5 as mt5
+        from mt5_proxy import mt5
         
         if not mt5.initialize():
             raise HTTPException(status_code=503, detail="MT5 not initialized")
@@ -226,7 +226,7 @@ async def get_positions():
 async def get_market_analysis(symbol: str):
     """Get market analysis for a symbol."""
     try:
-        import MetaTrader5 as mt5
+        from mt5_proxy import mt5
         import pandas as pd
         import numpy as np
         
@@ -284,7 +284,7 @@ async def get_market_analysis(symbol: str):
 async def get_available_symbols():
     """Get list of available symbols."""
     try:
-        import MetaTrader5 as mt5
+        from mt5_proxy import mt5
         
         if not mt5.initialize():
             raise HTTPException(status_code=503, detail="MT5 not initialized")

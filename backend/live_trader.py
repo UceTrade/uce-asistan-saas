@@ -3,7 +3,7 @@ Live Trader - Execute Generated Strategies in Real-Time
 """
 import pandas as pd
 import numpy as np
-import MetaTrader5 as mt5
+from mt5_proxy import mt5
 import time
 import threading
 import traceback

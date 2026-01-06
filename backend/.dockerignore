@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+test_*.py
+debug_*.py
+*_test.py
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# User data (will be in persistent storage)
+user_data/
+user_strategies/*.json
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PyInstaller
+backend.spec
+build_backend.bat
+BUILD_INSTRUCTIONS.md
+
+# Documentation
+*.md
+!README.md

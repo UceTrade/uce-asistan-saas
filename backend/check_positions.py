@@ -1,4 +1,4 @@
-import MetaTrader5 as mt5
+from mt5_proxy import mt5
 import pandas as pd
 
 def check_positions():

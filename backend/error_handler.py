@@ -289,12 +289,13 @@ def validate_environment() -> list[str]:
     
     # Check MT5 availability
     try:
-        import MetaTrader5 as mt5
-        if not mt5.initialize():
-            issues.append("MT5 terminal not accessible")
-            mt5.shutdown()
-    except ImportError:
-        issues.append("MetaTrader5 package not installed")
+        from mt5_proxy import mt5, MT5_AVAILABLE
+        if MT5_AVAILABLE:
+            if not mt5.initialize():
+                issues.append("MT5 terminal not accessible")
+                mt5.shutdown()
+        else:
+            issues.append("MetaTrader5 package not compatible/installed (Running in Simulation Mode)")
     except Exception as e:
         issues.append(f"MT5 check failed: {e}")
     

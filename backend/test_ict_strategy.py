@@ -55,7 +55,7 @@ def strategy(data, position):
 # Test function
 if __name__ == "__main__":
     from price_action_lib import PriceActionLib
-    import MetaTrader5 as mt5
+    from mt5_proxy import mt5
     from datetime import datetime, timedelta
     
     mt5.initialize()

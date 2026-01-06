@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UceAsistan Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .admin-container {
+            display: none;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-card h3 {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-free {
+            background: rgba(255, 255, 255, 0.1);
+            color: #aaa;
+        }
+
+        .badge-pro {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+        }
+
+        .badge-elite {
+            background: rgba(240, 147, 251, 0.2);
+            color: #f093fb;
+        }
+
+        .badge-pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .badge-confirmed {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .action-btn.confirm {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .action-btn.upgrade {
+            background: #667eea;
+            color: #fff;
+        }
+
+        .error {
+            color: #dc3545;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Login Section -->
+    <div class="login-container" id="loginSection">
+        <div class="login-box">
+            <h1>🔒 Admin Panel</h1>
+            <form onsubmit="login(event)">
+                <div class="form-group">
+                    <label>Admin Şifresi</label>
+                    <input type="password" id="adminPassword" required placeholder="Şifrenizi girin">
+                </div>
+                <button type="submit" class="btn">Giriş Yap</button>
+                <p class="error" id="loginError"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div class="admin-container" id="adminSection">
+        <div class="header">
+            <h1>🐆 UceAsistan Admin Panel</h1>
+            <button class="btn" style="width: auto; padding: 10px 20px;" onclick="logout()">Çıkış</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <h3>Toplam Kullanıcı</h3>
+                <div class="value" id="statTotalUsers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Bugün Aktif</h3>
+                <div class="value" id="statActiveToday">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Pro Kullanıcı</h3>
+                <div class="value" id="statProUsers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Elite Kullanıcı</h3>
+                <div class="value" id="statEliteUsers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Bekleyen Ödeme</h3>
+                <div class="value" id="statPendingPayments">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Toplam Gelir (USDT)</h3>
+                <div class="value" id="statRevenue">-</div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="section">
+            <h2>👥 Kayıtlı Kullanıcılar</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>İsim</th>
+                        <th>Plan</th>
+                        <th>Kayıt Tarihi</th>
+                        <th>Son Giriş</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTable">
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Yükleniyor...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Payments Table -->
+        <div class="section">
+            <h2>💰 Ödeme Geçmişi</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kullanıcı</th>
+                        <th>Miktar</th>
+                        <th>Durum</th>
+                        <th>TX Hash</th>
+                        <th>Tarih</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentsTable">
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Yükleniyor...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://uceasistan-api.koyeb.app'; // Update with your API URL
+        let adminPassword = '';
+
+        async function login(event) {
+            event.preventDefault();
+            adminPassword = document.getElementById('adminPassword').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/admin/stats`, {
+                    headers: { 'X-Admin-Password': adminPassword }
+                });
+
+                if (response.ok) {
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('adminSection').style.display = 'block';
+                    loadDashboard();
+                } else {
+                    document.getElementById('loginError').textContent = 'Yanlış şifre!';
+                }
+            } catch (error) {
+                document.getElementById('loginError').textContent = 'Bağlantı hatası!';
+            }
+        }
+
+        function logout() {
+            adminPassword = '';
+            document.getElementById('loginSection').style.display = 'flex';
+            document.getElementById('adminSection').style.display = 'none';
+        }
+
+        async function loadDashboard() {
+            await loadStats();
+            await loadUsers();
+            await loadPayments();
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_URL}/api/admin/stats`, {
+                    headers: { 'X-Admin-Password': adminPassword }
+                });
+                const data = await response.json();
+
+                document.getElementById('statTotalUsers').textContent = data.total_users;
+                document.getElementById('statActiveToday').textContent = data.active_users_today;
+                document.getElementById('statProUsers').textContent = data.pro_users;
+                document.getElementById('statEliteUsers').textContent = data.elite_users;
+                document.getElementById('statPendingPayments').textContent = data.pending_payments;
+                document.getElementById('statRevenue').textContent = '$' + data.total_revenue_usdt;
+            } catch (error) {
+                console.error('Stats load error:', error);
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_URL}/api/admin/users`, {
+                    headers: { 'X-Admin-Password': adminPassword }
+                });
+                const users = await response.json();
+
+                const tbody = document.getElementById('usersTable');
+                tbody.innerHTML = users.map(user => `
+                    <tr>
+                        <td>${user.email}</td>
+                        <td>${user.full_name || '-'}</td>
+                        <td><span class="badge badge-${user.subscription_tier}">${user.subscription_tier.toUpperCase()}</span></td>
+                        <td>${new Date(user.created_at).toLocaleDateString('tr-TR')}</td>
+                        <td>${user.last_login ? new Date(user.last_login).toLocaleDateString('tr-TR') : '-'}</td>
+                        <td>
+                            <button class="action-btn upgrade" onclick="upgradeUser('${user.id}')">Yükselt</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Users load error:', error);
+            }
+        }
+
+        async function loadPayments() {
+            try {
+                const response = await fetch(`${API_URL}/api/admin/payments`, {
+                    headers: { 'X-Admin-Password': adminPassword }
+                });
+                const payments = await response.json();
+
+                const tbody = document.getElementById('paymentsTable');
+                tbody.innerHTML = payments.map(payment => `
+                    <tr>
+                        <td>${payment.user_email}</td>
+                        <td>${payment.amount} ${payment.currency}</td>
+                        <td><span class="badge badge-${payment.status}">${payment.status.toUpperCase()}</span></td>
+                        <td>${payment.tx_hash || '-'}</td>
+                        <td>${new Date(payment.created_at).toLocaleDateString('tr-TR')}</td>
+                        <td>
+                            ${payment.status === 'pending' ?
+                        `<button class="action-btn confirm" onclick="confirmPayment('${payment.id}')">Onayla</button>`
+                        : '-'}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Payments load error:', error);
+            }
+        }
+
+        async function upgradeUser(userId) {
+            const tier = prompt('Yeni plan seçin (pro veya elite):');
+            if (!tier || !['pro', 'elite'].includes(tier)) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/admin/upgrade`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Password': adminPassword
+                    },
+                    body: JSON.stringify({ user_id: userId, new_tier: tier })
+                });
+
+                if (response.ok) {
+                    alert('Kullanıcı yükseltildi!');
+                    loadUsers();
+                }
+            } catch (error) {
+                alert('Hata: ' + error.message);
+            }
+        }
+
+        async function confirmPayment(paymentId) {
+            if (!confirm('Ödemeyi onaylamak istediğinize emin misiniz?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/admin/confirm-payment/${paymentId}`, {
+                    method: 'POST',
+                    headers: { 'X-Admin-Password': adminPassword }
+                });
+
+                if (response.ok) {
+                    alert('Ödeme onaylandı!');
+                    loadPayments();
+                    loadStats();
+                }
+            } catch (error) {
+                alert('Hata: ' + error.message);
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -3,7 +3,7 @@ Multi-Timeframe Analysis Module
 Analyzes multiple timeframes to identify trend alignment and high-probability setups
 """
 
-import MetaTrader5 as mt5
+from mt5_proxy import mt5
 import pandas as pd
 import numpy as np
 from datetime import datetime

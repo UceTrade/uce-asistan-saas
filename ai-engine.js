@@ -326,5 +326,304 @@ Bu VERİLERİ kullanarak analiz yap. Eski verileri kullanma.`;
     }
 }
 
-// Create global instance
+/**
+ * FinAgent Client - Finance-specialized AI for trading decisions
+ * Communicates with backend FinGPT integration for professional financial analysis
+ * 
+ * Supported FREE providers:
+ * 1. Groq - FREE, no credit card required (console.groq.com)
+ * 2. OpenRouter - 50 free requests/day (openrouter.ai)
+ */
+class FinAgentClient {
+    constructor() {
+        // Free providers (priority)
+        this.groqApiKey = '';        // FREE - no credit card!
+        this.openrouterApiKey = '';  // 50 free/day
+        // Paid providers (fallback)
+        this.togetherApiKey = '';
+        this.fireworksApiKey = '';
+
+        this.isEnabled = false;
+        this.lastResponse = null;
+        this.lastProviderUsed = null;
+        this.loadSettings();
+    }
+
+    loadSettings() {
+        this.groqApiKey = loadFromStorage('finAgentGroqKey', '');
+        this.openrouterApiKey = loadFromStorage('finAgentOpenRouterKey', '');
+        this.togetherApiKey = loadFromStorage('finAgentTogetherKey', '');
+        this.fireworksApiKey = loadFromStorage('finAgentFireworksKey', '');
+        this.isEnabled = loadFromStorage('finAgentEnabled', false);
+    }
+
+    saveSettings(groqKey, openrouterKey = '', togetherKey = '', fireworksKey = '', enabled = true) {
+        this.groqApiKey = groqKey || '';
+        this.openrouterApiKey = openrouterKey || '';
+        this.togetherApiKey = togetherKey || '';
+        this.fireworksApiKey = fireworksKey || '';
+        this.isEnabled = enabled;
+
+        saveToStorage('finAgentGroqKey', groqKey || '');
+        saveToStorage('finAgentOpenRouterKey', openrouterKey || '');
+        saveToStorage('finAgentTogetherKey', togetherKey || '');
+        saveToStorage('finAgentFireworksKey', fireworksKey || '');
+        saveToStorage('finAgentEnabled', enabled);
+    }
+
+    hasApiKey() {
+        return !!(this.groqApiKey || this.openrouterApiKey || this.togetherApiKey || this.fireworksApiKey);
+    }
+
+    getActiveProvider() {
+        if (this.groqApiKey) return 'Groq (Free)';
+        if (this.openrouterApiKey) return 'OpenRouter (Free)';
+        if (this.togetherApiKey) return 'Together AI';
+        if (this.fireworksApiKey) return 'Fireworks AI';
+        return 'None';
+    }
+
+    /**
+     * Send query to FinAgent via WebSocket
+     */
+    async query(queryText, context = {}) {
+        if (!this.hasApiKey()) {
+            return {
+                error: true,
+                message: 'FinAgent API anahtarı gerekli. Groq ücretsiz! console.groq.com adresinden alabilirsiniz.',
+                setup_required: true,
+                setup_guide: '1. console.groq.com adresine gidin\n2. Ücretsiz hesap oluşturun (kredi kartı yok!)\n3. API Keys > Create API Key\n4. Konsolda: finAgent.saveSettings("YOUR_GROQ_KEY")'
+            };
+        }
+
+        return new Promise((resolve, reject) => {
+            if (!window.ws || window.ws.readyState !== WebSocket.OPEN) {
+                reject(new Error('WebSocket bağlantısı yok'));
+                return;
+            }
+
+            const handler = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'fin_agent_response') {
+                        window.ws.removeEventListener('message', handler);
+                        this.lastResponse = data.data;
+                        resolve(data.data);
+                    }
+                } catch (e) {
+                    // Not our message
+                }
+            };
+
+            window.ws.addEventListener('message', handler);
+
+            window.ws.send(JSON.stringify({
+                action: 'fin_agent_query',
+                query: queryText,
+                context: context,
+                api_keys: {
+                    groq_api_key: this.groqApiKey,
+                    openrouter_api_key: this.openrouterApiKey,
+                    together_api_key: this.togetherApiKey,
+                    fireworks_api_key: this.fireworksApiKey
+                }
+            }));
+
+            // Timeout after 30s
+            setTimeout(() => {
+                window.ws.removeEventListener('message', handler);
+                reject(new Error('FinAgent yanıt zaman aşımı'));
+            }, 30000);
+        });
+    }
+
+    /**
+     * Get sentiment analysis for a symbol
+     */
+    async getSentiment(symbol, news = []) {
+        return this._sendRequest('fin_agent_sentiment', {
+            symbol: symbol,
+            news: news
+        }, 'fin_agent_sentiment_response');
+    }
+
+    /**
+     * Get trading decision for a symbol
+     */
+    async getTradeSignal(symbol) {
+        return this._sendRequest('fin_agent_trade_signal', {
+            symbol: symbol
+        }, 'fin_agent_trade_signal_response');
+    }
+
+    /**
+     * Get risk assessment for planned trade
+     */
+    async assessRisk(symbol, lotSize) {
+        return this._sendRequest('fin_agent_risk', {
+            symbol: symbol,
+            lot_size: lotSize
+        }, 'fin_agent_risk_response');
+    }
+
+    /**
+     * Get comprehensive market analysis
+     */
+    async analyzeMarket(symbol, timeframe = 'H1') {
+        return this._sendRequest('fin_agent_analyze_market', {
+            symbol: symbol,
+            timeframe: timeframe
+        }, 'fin_agent_market_analysis_response');
+    }
+
+    /**
+     * Internal helper for sending requests
+     */
+    async _sendRequest(action, params, responseType) {
+        if (!this.hasApiKey()) {
+            return {
+                error: true,
+                message: 'FinAgent API anahtarı gerekli',
+                setup_required: true
+            };
+        }
+
+        return new Promise((resolve, reject) => {
+            if (!window.ws || window.ws.readyState !== WebSocket.OPEN) {
+                reject(new Error('WebSocket bağlantısı yok'));
+                return;
+            }
+
+            const handler = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === responseType) {
+                        window.ws.removeEventListener('message', handler);
+                        resolve(data.data);
+                    }
+                } catch (e) {
+                    // Not our message
+                }
+            };
+
+            window.ws.addEventListener('message', handler);
+
+            window.ws.send(JSON.stringify({
+                action: action,
+                ...params,
+                api_keys: {
+                    together_api_key: this.togetherApiKey,
+                    fireworks_api_key: this.fireworksApiKey
+                }
+            }));
+
+            // Timeout
+            setTimeout(() => {
+                window.ws.removeEventListener('message', handler);
+                reject(new Error('İstek zaman aşımı'));
+            }, 30000);
+        });
+    }
+
+    /**
+     * Format FinAgent response for display
+     */
+    formatResponse(response) {
+        if (response.error) {
+            return `❌ **Hata:** ${response.message}`;
+        }
+
+        const queryType = response.query_type;
+        let formatted = '';
+
+        switch (queryType) {
+            case 'sentiment':
+                formatted = this._formatSentiment(response);
+                break;
+            case 'trade_decision':
+                formatted = this._formatTradeDecision(response);
+                break;
+            case 'risk':
+                formatted = this._formatRisk(response);
+                break;
+            case 'analysis':
+                formatted = this._formatAnalysis(response);
+                break;
+            default:
+                formatted = response.summary_tr || JSON.stringify(response, null, 2);
+        }
+
+        return formatted;
+    }
+
+    _formatSentiment(r) {
+        const emoji = r.sentiment === 'BULLISH' ? '🟢' : r.sentiment === 'BEARISH' ? '🔴' : '🟡';
+        return `${emoji} **Sentiment: ${r.sentiment}** (Güven: %${(r.confidence * 100).toFixed(0)})
+
+📊 **Etki Seviyesi:** ${r.impact_level || 'N/A'}
+⏱️ **Zaman Dilimi:** ${r.timeframe || 'N/A'}
+
+**Önemli Faktörler:**
+${(r.key_factors || []).map(f => `• ${f}`).join('\n') || '• Bilgi yok'}
+
+💬 ${r.summary_tr || ''}`;
+    }
+
+    _formatTradeDecision(r) {
+        const emoji = r.decision === 'BUY' ? '🟢 LONG' : r.decision === 'SELL' ? '🔴 SHORT' : '⏸️ BEKLE';
+        return `${emoji} **${r.decision}** (Güven: %${(r.confidence * 100).toFixed(0)})
+
+📍 **Giriş Bölgesi:** ${r.entry_zone?.min || 'N/A'} - ${r.entry_zone?.max || 'N/A'}
+🛑 **Stop Loss:** ${r.stop_loss || 'N/A'}
+🎯 **Take Profit:** ${(r.take_profit || []).map(tp => `${tp.level} (${tp.ratio})`).join(', ') || 'N/A'}
+⚖️ **Risk/Reward:** ${r.risk_reward || 'N/A'}
+
+**Gerekçeler:**
+${(r.reasoning || []).map(reason => `• ${reason}`).join('\n') || '• Bilgi yok'}
+
+${(r.warnings || []).length > 0 ? `\n⚠️ **Uyarılar:**\n${r.warnings.map(w => `• ${w}`).join('\n')}` : ''}
+
+💬 ${r.summary_tr || ''}`;
+    }
+
+    _formatRisk(r) {
+        const riskEmoji = {
+            'LOW': '🟢',
+            'MEDIUM': '🟡',
+            'HIGH': '🟠',
+            'EXTREME': '🔴'
+        };
+        return `${riskEmoji[r.risk_level] || '⚪'} **Risk Seviyesi: ${r.risk_level}** (Skor: ${r.risk_score || 0}/100)
+
+📊 **Önerilen Lot:** ${r.recommended_lot || 'N/A'}
+📈 **Max Pozisyon:** ${r.max_position_size || 'N/A'}
+
+**Risk Faktörleri:**
+${(r.risk_factors || []).map(f => `• ${f}`).join('\n') || '• Bilgi yok'}
+
+**Önlemler:**
+${(r.mitigation || []).map(m => `• ${m}`).join('\n') || '• Bilgi yok'}
+
+💬 ${r.summary_tr || ''}`;
+    }
+
+    _formatAnalysis(r) {
+        const trendEmoji = r.trend === 'UPTREND' ? '📈' : r.trend === 'DOWNTREND' ? '📉' : '➡️';
+        return `${trendEmoji} **Trend: ${r.trend}** (Güç: %${r.trend_strength || 0})
+
+🎯 **Temel Seviyeler:**
+• Direnç: ${(r.key_levels?.resistance || []).join(', ') || 'N/A'}
+• Destek: ${(r.key_levels?.support || []).join(', ') || 'N/A'}
+
+📊 **Teknik Sinyaller:**
+${(r.technical_signals || []).map(s => `• ${s.indicator}: ${s.signal} (${s.value})`).join('\n') || '• Bilgi yok'}
+
+🔮 **Genel Görünüm:** ${r.outlook || 'N/A'}
+
+💬 ${r.summary_tr || ''}`;
+    }
+}
+
+// Create global instances
 const aiEngine = new AIEngine();
+const finAgent = new FinAgentClient();

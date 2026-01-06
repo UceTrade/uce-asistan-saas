@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
-import MetaTrader5 as mt5
+from mt5_proxy import mt5
 
 
 class JournalAnalytics:

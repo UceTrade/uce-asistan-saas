@@ -3,7 +3,7 @@ import os
 import json
 import asyncio
 import websockets
-import MetaTrader5 as mt5
+from mt5_proxy import mt5
 import colorama
 from colorama import Fore, Style
 

@@ -2,9 +2,13 @@
 MT5 Auto-Connect Server - Automatically connects to active MT5 account
 """
 import asyncio
-import websockets
 import json
-import MetaTrader5 as mt5
+from mt5_proxy import mt5, MT5_AVAILABLE
+
+if not MT5_AVAILABLE:
+    print("WARNING: MetaTrader5 package not found or incompatible. Running in Simulation Mode.")
+
+import websockets
 from datetime import datetime
 from config import settings, validate_settings
 from ai_strategy_parser import AIStrategyParser
@@ -12,7 +16,6 @@ from backtest_engine import BacktestEngine
 from journal_manager import JournalManager
 from journal_analytics import JournalAnalytics
 from strategy_manager import StrategyManager
-from live_trader import LiveTrader
 from signal_confluence import SignalConfluenceFinder
 from price_action_lib import PriceActionLib
 from forecasting_engine import ForecastingEngine
@@ -20,7 +23,9 @@ from telegram_bot import telegram_notifier
 from multi_timeframe import MultiTimeframeAnalyzer
 from drawdown_planner import DrawdownRecoveryPlanner
 from prop_firm_database import get_rules_for_broker, get_prop_firm_rules, get_all_prop_firms, get_risk_recommendations
+from live_trader import LiveTrader
 from yahoo_finance_provider import yahoo_provider
+from fin_agent import FinAgent, FinanceQueryType
 import pandas as pd
 import numpy as np
 
@@ -49,6 +54,9 @@ class MT5AutoConnectServer:
         self.journal_analytics = JournalAnalytics(self.journal_manager)
         self.live_trader = LiveTrader()  # Live trading engine
         
+        # FinGPT Financial Agent
+        self.fin_agent = FinAgent()
+        
         # Telegram Notifier
         self.telegram = telegram_notifier
         self.last_risk_level = 'safe'  # Track for alert triggering
@@ -61,17 +69,25 @@ class MT5AutoConnectServer:
     def initialize_mt5(self):
         """Initialize MT5 and get current account info"""
         if not mt5.initialize():
-            print("[ERROR] Failed to initialize MT5")
-            print("Make sure MetaTrader 5 is installed and running")
-            return False
+            if MT5_AVAILABLE:
+                print("[ERROR] Failed to initialize MT5")
+                print("Make sure MetaTrader 5 is installed and running")
+                return False
+            else:
+                print("[INFO] Simulation Mode Initialized (Mock MT5)")
         
         # Get account info
         account_info = mt5.account_info()
         if account_info is None:
-            print("[ERROR] No active MT5 account found")
-            print("Please login to an MT5 account first")
-            mt5.shutdown()
-            return False
+            if MT5_AVAILABLE:
+                print("[ERROR] No active MT5 account found")
+                print("Please login to an MT5 account first")
+                mt5.shutdown()
+                return False
+            else:
+                print("[INFO] No mock account info available, but continuing in simulation.")
+                self.current_account = {'login': 0, 'server': 'Simulation', 'name': 'Sim User'}
+                return True
         
         self.current_account = {
             'login': account_info.login,
@@ -863,6 +879,172 @@ class MT5AutoConnectServer:
                     'message': msg
                 }))
 
+            # ========== FinGPT Financial Agent Handlers ==========
+            elif action == 'fin_agent_query':
+                # Main FinAgent query endpoint
+                try:
+                    query = data.get('query')
+                    context = data.get('context', {})
+                    api_keys = data.get('api_keys', {})
+                    
+                    # Set API keys if provided (in priority order: free first)
+                    if api_keys.get('groq_api_key'):
+                        self.fin_agent.groq_api_key = api_keys['groq_api_key']
+                    if api_keys.get('openrouter_api_key'):
+                        self.fin_agent.openrouter_api_key = api_keys['openrouter_api_key']
+                    if api_keys.get('together_api_key'):
+                        self.fin_agent.together_api_key = api_keys['together_api_key']
+                    if api_keys.get('fireworks_api_key'):
+                        self.fin_agent.fireworks_api_key = api_keys['fireworks_api_key']
+                    
+                    # Add account context if available
+                    account_data = self.get_account_data()
+                    if account_data:
+                        context['account_balance'] = account_data.get('balance')
+                        context['open_positions'] = account_data.get('positions', [])
+                        context['daily_pnl'] = account_data.get('daily_profit')
+                    
+                    # Run analysis
+                    result = await self.fin_agent.analyze(query, context)
+                    
+                    print(f"[FIN_AGENT] Query: {query[:50]}... → Type: {result.get('query_type', 'unknown')}")
+                    
+                    await websocket.send(json.dumps({
+                        'type': 'fin_agent_response',
+                        'data': result
+                    }))
+                    
+                except Exception as e:
+                    print(f"[FIN_AGENT] Error: {e}")
+                    await websocket.send(json.dumps({
+                        'type': 'fin_agent_response',
+                        'data': {'error': True, 'message': str(e)}
+                    }))
+            
+            elif action == 'fin_agent_sentiment':
+                # Quick sentiment analysis
+                try:
+                    symbol = data.get('symbol', 'EURUSD')
+                    news = data.get('news', [])
+                    api_keys = data.get('api_keys', {})
+                    
+                    if api_keys.get('together_api_key'):
+                        self.fin_agent.together_api_key = api_keys['together_api_key']
+                    
+                    result = await self.fin_agent.get_sentiment(symbol, news)
+                    
+                    await websocket.send(json.dumps({
+                        'type': 'fin_agent_sentiment_response',
+                        'data': result
+                    }))
+                    
+                except Exception as e:
+                    await websocket.send(json.dumps({
+                        'type': 'fin_agent_sentiment_response',
+                        'data': {'error': True, 'message': str(e)}
+                    }))
+            
+            elif action == 'fin_agent_trade_signal':
+                # Get trading decision
+                try:
+                    symbol = data.get('symbol', 'EURUSD')
+                    api_keys = data.get('api_keys', {})
+                    
+                    if api_keys.get('together_api_key'):
+                        self.fin_agent.together_api_key = api_keys['together_api_key']
+                    
+                    # Get market data for context
+                    market_analysis = self.get_market_analysis(symbol)
+                    market_data = {}
+                    if 'error' not in market_analysis:
+                        market_data = {
+                            'price': market_analysis.get('price'),
+                            'rsi': market_analysis.get('rsi_14'),
+                            'trend': market_analysis.get('trend'),
+                            'sma_20': market_analysis.get('sma_20'),
+                            'sma_50': market_analysis.get('sma_50')
+                        }
+                        if market_analysis.get('smc'):
+                            market_data['confluence_score'] = market_analysis['smc'].get('confluence_score')
+                    
+                    result = await self.fin_agent.get_trade_signal(symbol, market_data)
+                    
+                    await websocket.send(json.dumps({
+                        'type': 'fin_agent_trade_signal_response',
+                        'data': result
+                    }))
+                    
+                except Exception as e:
+                    await websocket.send(json.dumps({
+                        'type': 'fin_agent_trade_signal_response',
+                        'data': {'error': True, 'message': str(e)}
+                    }))
+            
+            elif action == 'fin_agent_risk':
+                # Risk assessment
+                try:
+                    symbol = data.get('symbol', 'EURUSD')
+                    planned_lot = data.get('lot_size', 0.01)
+                    api_keys = data.get('api_keys', {})
+                    
+                    if api_keys.get('together_api_key'):
+                        self.fin_agent.together_api_key = api_keys['together_api_key']
+                    
+                    # Get account balance
+                    account_data = self.get_account_data()
+                    balance = account_data.get('balance', 10000) if account_data else 10000
+                    
+                    result = await self.fin_agent.assess_risk(symbol, balance, planned_lot)
+                    
+                    await websocket.send(json.dumps({
+                        'type': 'fin_agent_risk_response',
+                        'data': result
+                    }))
+                    
+                except Exception as e:
+                    await websocket.send(json.dumps({
+                        'type': 'fin_agent_risk_response',
+                        'data': {'error': True, 'message': str(e)}
+                    }))
+            
+            elif action == 'fin_agent_analyze_market':
+                # Full market analysis
+                try:
+                    symbol = data.get('symbol', 'EURUSD')
+                    timeframe = data.get('timeframe', 'H1')
+                    api_keys = data.get('api_keys', {})
+                    
+                    if api_keys.get('together_api_key'):
+                        self.fin_agent.together_api_key = api_keys['together_api_key']
+                    
+                    result = await self.fin_agent.analyze_market(symbol, timeframe)
+                    
+                    await websocket.send(json.dumps({
+                        'type': 'fin_agent_market_analysis_response',
+                        'data': result
+                    }))
+                    
+                except Exception as e:
+                    await websocket.send(json.dumps({
+                        'type': 'fin_agent_market_analysis_response',
+                        'data': {'error': True, 'message': str(e)}
+                    }))
+            
+            elif action == 'fin_agent_set_keys':
+                # Set API keys for FinAgent
+                together_key = data.get('together_api_key')
+                fireworks_key = data.get('fireworks_api_key')
+                
+                if together_key:
+                    self.fin_agent.together_api_key = together_key
+                if fireworks_key:
+                    self.fin_agent.fireworks_api_key = fireworks_key
+                
+                await websocket.send(json.dumps({
+                    'type': 'fin_agent_keys_set',
+                    'success': True
+                }))
+
             elif action == 'find_confluences':
                 # Signal Confluence Detection
                 try:
@@ -1377,6 +1559,17 @@ class MT5AutoConnectServer:
                     'settings': self.telegram_settings
                 }))
 
+            elif action == 'health':
+                # Health check for cloud deployments (Koyeb, Railway, etc.)
+                response = {
+                    'type': 'health_check',
+                    'status': 'healthy',
+                    'timestamp': datetime.now().isoformat(),
+                    'mt5_connected': mt5.terminal_info() is not None,
+                    'version': '2.2'
+                }
+                await websocket.send(json.dumps(response))
+            
             elif action == 'ping':
                 # Heartbeat
                 response = {

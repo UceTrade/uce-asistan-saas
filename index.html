@@ -1539,26 +1539,45 @@
         <img src="assets/jaguar_logo.jpg" alt="UceAsistan AI" style="width: 100%; height: 100%; object-fit: cover;">
     </button>
     </div><!-- Close appShell -->
-    <!-- Scripts -->
+
+    <!-- Scripts - Organized by dependency order -->
+
+    <!-- Core Modules (load first) -->
+    <script src="main.js"></script>
+    <script src="notifications.js"></script>
+
+    <!-- Authentication & Payments -->
     <script src="auth.js"></script>
     <script src="payment.js"></script>
+
+    <!-- Utilities & Connection -->
     <script src="utils.js"></script>
     <script src="mt5-connector.js"></script>
+
+    <!-- Core Features -->
     <script src="risk-manager.js"></script>
     <script src="ai-engine.js"></script>
     <script src="dashboard.js"></script>
+
+    <!-- Trading Features -->
     <script src="backtest.js"></script>
+    <script src="strategies.js"></script>
+    <script src="enhanced-features.js"></script>
+    <script src="ai-editor.js"></script>
+
+    <!-- Journal & Analytics -->
     <script src="journal.js"></script>
     <script src="journal_ui_helper.js"></script>
     <script src="journal-analytics.js"></script>
+
+    <!-- Advanced Features -->
     <script src="confluence-finder.js"></script>
     <script src="neural-pulse.js"></script>
     <script src="market-terminal.js"></script>
     <script src="mtf-recovery.js"></script>
+
+    <!-- Main Application (load last) -->
     <script src="app.js"></script>
-    <script src="strategies.js"></script>
-    <script src="enhanced-features.js"></script>
-    <script src="ai-editor.js"></script>
 </body>
 
 </html>

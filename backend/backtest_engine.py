@@ -1,7 +1,7 @@
 """
 Backtest Engine - Execute trading strategies on historical data
 """
-import MetaTrader5 as mt5
+from mt5_proxy import mt5
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta

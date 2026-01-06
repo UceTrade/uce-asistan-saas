@@ -3,7 +3,7 @@ Journal Manager - Handles trade history, user notes, and analysis data
 """
 import json
 import os
-import MetaTrader5 as mt5
+from mt5_proxy import mt5
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
