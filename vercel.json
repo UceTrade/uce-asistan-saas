@@ -1,7 +1,8 @@
 {
     "version": 2,
     "name": "uceasistan",
-    "buildCommand": null,
+    "buildCommand": "",
+    "installCommand": "",
     "outputDirectory": ".",
     "framework": null,
     "rewrites": [
