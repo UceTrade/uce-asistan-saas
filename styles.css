@@ -745,6 +745,17 @@ body {
     gap: var(--space-md);
   }
 
+  /* Mobile-friendly header buttons */
+  .header-content .flex.gap-sm {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .header-content .btn {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-size-sm);
+  }
+
   .grid-2,
   .grid-3,
   .grid-4 {
@@ -754,6 +765,60 @@ body {
   .chat-container {
     width: calc(100% - 2 * var(--space-lg));
     max-height: 500px;
+  }
+
+  /* Terminal panel mobile adjustments */
+  .terminal-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .terminal-bottom-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .terminal-panel {
+    margin-bottom: var(--space-md);
+  }
+
+  /* Stat cards mobile */
+  .stat-value {
+    font-size: var(--font-size-2xl);
+  }
+
+  /* Modal mobile */
+  .modal {
+    padding: var(--space-md);
+    width: 95%;
+  }
+
+  /* FAB position on mobile */
+  .fab-ai {
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .header-content .btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .stat-value {
+    font-size: var(--font-size-xl);
+  }
+
+  .logo {
+    font-size: var(--font-size-lg);
+  }
+
+  /* Hide some nav text on very small screens */
+  .header-content .btn {
+    min-width: auto;
   }
 }
 

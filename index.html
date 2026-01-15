@@ -62,7 +62,7 @@
             </form>
 
             <div class="auth-footer">
-                <p>&copy; 2024 UceAsistan SaaS. Tüm hakları saklıdır.</p>
+                <p>&copy; 2026 UceAsistan SaaS. Tüm hakları saklıdır.</p>
             </div>
         </div>
     </div>
@@ -101,6 +101,10 @@
                     <button class="btn btn-outline" onclick="openSettingsModal()">
                         ⚙️ Ayarlar
                     </button>
+                    <!-- Home Button -->
+                    <a href="landing.html" class="btn btn-outline" title="Ana Sayfaya Dön">
+                        🏠
+                    </a>
                 </div>
             </div>
         </header>
@@ -335,8 +339,8 @@
 
                 <!-- NEW: Quick Action Buttons -->
                 <div class="flex gap-md mb-md">
-                    <button class="btn btn-primary" onclick="openConversationWizard()">
-                        💬 Adım Adım Wizard
+                    <button class="btn btn-primary" onclick="startStrategyWizard()">
+                        🧙 Strateji Sihirbazı
                     </button>
                     <button class="btn btn-outline" onclick="showTemplateGallery()">
                         📚 Şablon Galerisi
@@ -1083,6 +1087,24 @@
                     <div class="form-group">
                         <label class="form-label">API Anahtarı</label>
                         <input type="password" class="form-input" id="aiApiKey" placeholder="API Anahtarınızı girin">
+                    </div>
+
+                    <!-- API Key Help Box -->
+                    <div class="glass-card mb-md"
+                        style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3); padding: 1rem;">
+                        <p class="text-sm text-secondary mb-sm">
+                            <strong>🔑 API Anahtarı Nasıl Alınır?</strong>
+                        </p>
+                        <ul class="text-sm text-secondary" style="margin-left: 1rem; line-height: 1.8;">
+                            <li><strong>Groq (ÜCRETSİZ!):</strong> <a href="https://console.groq.com" target="_blank"
+                                    style="color: var(--color-accent-blue);">console.groq.com</a> → API Keys</li>
+                            <li><strong>OpenAI:</strong> <a href="https://platform.openai.com/api-keys" target="_blank"
+                                    style="color: var(--color-accent-blue);">platform.openai.com</a> (Ücretli)</li>
+                            <li><strong>Gemini:</strong> <a href="https://aistudio.google.com/apikey" target="_blank"
+                                    style="color: var(--color-accent-blue);">aistudio.google.com</a> (Ücretsiz)</li>
+                        </ul>
+                        <p class="text-xs text-muted mt-sm">💡 Öneri: Groq ücretsiz ve çok hızlı, başlangıç için ideal!
+                        </p>
                     </div>
 
                     <hr style="border-color: rgba(255,255,255,0.1); margin: var(--space-lg) 0;">
